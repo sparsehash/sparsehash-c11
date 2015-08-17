@@ -66,5 +66,4 @@ TEST(Simple, All) {
     ASSERT_EQ(dmap.find(i) != dmap.end() && dmap.find(i)->second == i + 1,
               (i % 10) == 5);
   }
-  printf("PASS\n");
 }
