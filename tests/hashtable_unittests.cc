@@ -419,11 +419,11 @@ extern const char* const kDeletedCharStar = "--deleted char*--";
       HashtableInterface_SparseHashSet<                                      \
           int, Hasher, Hasher,                                               \
           Alloc<int>>, /* This is a                                          \
-                                                  table where                \
-                                                  the key                    \
-                                                  associated                 \
-                                                  with a value               \
-                                                  is -value */               \
+                                                     table where             \
+                                                     the key                 \
+                                                     associated              \
+                                                     with a value            \
+                                                     is -value */            \
       HashtableInterface_SparseHashtable<int, int, Hasher, Negation<int>,    \
                                          SetKey<int, Negation<int>>, Hasher, \
                                          Alloc<int>>,                        \
@@ -441,9 +441,10 @@ extern const char* const kDeletedCharStar = "--deleted char*--";
       HashtableInterface_SparseHashSet<                                       \
           string, Hasher, Hasher,                                             \
           Alloc<string>>, /* This is a table where the key                    \
-                                                     associated with a value  \
-                             is                                               \
-                                                     Cap(value) */            \
+                                                        associated with a     \
+                             value                                            \
+                                is                                            \
+                                                        Cap(value) */         \
       HashtableInterface_SparseHashtable<string, string, Hasher, Capital,     \
                                          SetKey<string, Capital>, Hasher,     \
                                          Alloc<string>>,                      \
@@ -464,7 +465,7 @@ extern const char* const kDeletedCharStar = "--deleted char*--";
       HashtableInterface_SparseHashSet<                                       \
           const char*, Hasher, Hasher,                                        \
           Alloc<const char*>>, /* This is a table where each value is its own \
-                                                          key. */             \
+                                                             key. */          \
       HashtableInterface_SparseHashtable<                                     \
           const char*, const char*, Hasher, Identity,                         \
           SetKey<const char*, Identity>, Hasher, Alloc<const char*>>,         \
@@ -566,8 +567,8 @@ TYPED_TEST(HashtableIntTest, Typedefs) {
   typename TypeParam::const_pointer cp;
   // I can't declare variables of reference-type, since I have nothing
   // to point them to, so I just make sure that these types exist.
-  typedef typename TypeParam::reference r;
-  typedef typename TypeParam::const_reference cf;
+  __attribute__((unused)) typedef typename TypeParam::reference r;
+  __attribute__((unused)) typedef typename TypeParam::const_reference cf;
 
   typename TypeParam::iterator i;
   typename TypeParam::const_iterator ci;
