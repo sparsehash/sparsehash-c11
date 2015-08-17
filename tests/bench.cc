@@ -79,7 +79,7 @@ extern "C" {
 #include <algorithm>
 #include <vector>
 #include <chrono>
-#include <sparsehash/type_traits.h>
+#include <type_traits>
 #include <sparsehash/dense_hash_map>
 #include <sparsehash/sparse_hash_map>
 
@@ -201,7 +201,7 @@ class HashObject {
     for (size_t i = 0; i < Hashsize - sizeof(i_); ++i) {
       hashval += buffer_[i];
     }
-    return SPARSEHASH_HASH<int>()(hashval);
+    return std::hash<int>()(hashval);
   }
 
   bool operator==(const class_type& that) const { return this->i_ == that.i_; }
@@ -228,7 +228,7 @@ class HashObject<sizeof(int), sizeof(int)> {
 
   size_t Hash() const {
     g_num_hashes++;
-    return SPARSEHASH_HASH<int>()(i_);
+    return std::hash<int>()(i_);
   }
 
   bool operator==(const class_type& that) const { return this->i_ == that.i_; }
@@ -239,18 +239,15 @@ class HashObject<sizeof(int), sizeof(int)> {
   int i_;  // the key used for hashing
 };
 
-_START_GOOGLE_NAMESPACE_
-
+namespace std {
 // Let the hashtable implementations know it can use an optimized memcpy,
 // because the compiler defines both the destructor and copy constructor.
-
 template <int Size, int Hashsize>
-struct has_trivial_copy<HashObject<Size, Hashsize> > : true_type {};
-
+struct is_trivially_copy_constructible<HashObject<Size, Hashsize>> : true_type {
+};
 template <int Size, int Hashsize>
-struct has_trivial_destructor<HashObject<Size, Hashsize> > : true_type {};
-
-_END_GOOGLE_NAMESPACE_
+struct is_trivially_destructible<HashObject<Size, Hashsize>> : true_type {};
+}
 
 class HashFn {
  public:
@@ -620,21 +617,21 @@ static void test_all_maps(int obj_size, int iters) {
 
   if (FLAGS_test_sparse_hash_map)
     measure_map<EasyUseSparseHashMap<ObjType, int, HashFn>,
-                EasyUseSparseHashMap<ObjType*, int, HashFn> >(
+                EasyUseSparseHashMap<ObjType*, int, HashFn>>(
         "SPARSE_HASH_MAP", obj_size, iters, stress_hash_function);
 
   if (FLAGS_test_dense_hash_map)
     measure_map<EasyUseDenseHashMap<ObjType, int, HashFn>,
-                EasyUseDenseHashMap<ObjType*, int, HashFn> >(
+                EasyUseDenseHashMap<ObjType*, int, HashFn>>(
         "DENSE_HASH_MAP", obj_size, iters, stress_hash_function);
 
   if (FLAGS_test_hash_map)
     measure_map<EasyUseHashMap<ObjType, int, HashFn>,
-                EasyUseHashMap<ObjType*, int, HashFn> >(
+                EasyUseHashMap<ObjType*, int, HashFn>>(
         "STANDARD HASH_MAP", obj_size, iters, stress_hash_function);
 
   if (FLAGS_test_map)
-    measure_map<EasyUseMap<ObjType, int>, EasyUseMap<ObjType*, int> >(
+    measure_map<EasyUseMap<ObjType, int>, EasyUseMap<ObjType*, int>>(
         "STANDARD MAP", obj_size, iters, false);
 }
 
@@ -657,11 +654,11 @@ int main(int argc, char** argv) {
   // a HashObject as it would be to use just a straight int/char
   // buffer.  To keep memory use similar, we normalize the number of
   // iterations based on size.
-  if (FLAGS_test_4_bytes) test_all_maps<HashObject<4, 4> >(4, iters / 1);
-  if (FLAGS_test_8_bytes) test_all_maps<HashObject<8, 8> >(8, iters / 2);
-  if (FLAGS_test_16_bytes) test_all_maps<HashObject<16, 16> >(16, iters / 4);
+  if (FLAGS_test_4_bytes) test_all_maps<HashObject<4, 4>>(4, iters / 1);
+  if (FLAGS_test_8_bytes) test_all_maps<HashObject<8, 8>>(8, iters / 2);
+  if (FLAGS_test_16_bytes) test_all_maps<HashObject<16, 16>>(16, iters / 4);
   if (FLAGS_test_256_bytes)
-    test_all_maps<HashObject<256, 256> >(256, iters / 32);
+    test_all_maps<HashObject<256, 256>>(256, iters / 32);
 
   return 0;
 }
