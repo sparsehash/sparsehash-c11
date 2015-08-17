@@ -93,25 +93,19 @@
 // The value type is required to be copy constructible and default
 // constructible, but it need not be (and commonly isn't) assignable.
 
-#ifndef _SPARSEHASHTABLE_H_
-#define _SPARSEHASHTABLE_H_
+#pragma once
 
-#include <sparsehash/internal/sparseconfig.h>
 #include <assert.h>
-#include <algorithm>                 // For swap(), eg
-#include <iterator>                  // for iterator tags
-#include <limits>                    // for numeric_limits
-#include <utility>                   // for pair
-#include <sparsehash/type_traits.h>  // for remove_const
+#include <algorithm>    // For swap(), eg
+#include <iterator>     // for iterator tags
+#include <limits>       // for numeric_limits
+#include <utility>      // for pair
+#include <type_traits>  // for remove_const
 #include <sparsehash/internal/hashtable-common.h>
 #include <sparsehash/sparsetable>  // IWYU pragma: export
 #include <stdexcept>               // For length_error
 
-_START_GOOGLE_NAMESPACE_
-
-namespace base {  // just to make google->opensource transition easier
-using GOOGLE_NAMESPACE::remove_const;
-}
+namespace google {
 
 #ifndef SPARSEHASH_STAT_UPDATE
 #define SPARSEHASH_STAT_UPDATE(x) ((void)0)
@@ -292,9 +286,9 @@ struct sparse_hashtable_destructive_iterator {
  public:
   typedef sparse_hashtable_destructive_iterator<V, K, HF, ExK, SetK, EqK, A>
       iterator;
-  typedef typename sparsetable<V, DEFAULT_GROUP_SIZE,
-                               value_alloc_type>::destructive_iterator
-      st_iterator;
+  typedef
+      typename sparsetable<V, DEFAULT_GROUP_SIZE,
+                           value_alloc_type>::destructive_iterator st_iterator;
 
   typedef std::forward_iterator_tag iterator_category;  // very little defined!
   typedef V value_type;
@@ -1180,8 +1174,9 @@ class sparse_hashtable {
   // needed for storing these zero-size operators.  Since ExtractKey and
   // hasher's operator() might have the same function signature, they
   // must be packaged in different classes.
-  struct Settings : sparsehash_internal::sh_hashtable_settings<
-                        key_type, hasher, size_type, HT_MIN_BUCKETS> {
+  struct Settings
+      : sparsehash_internal::sh_hashtable_settings<key_type, hasher, size_type,
+                                                   HT_MIN_BUCKETS> {
     explicit Settings(const hasher& hf)
         : sparsehash_internal::sh_hashtable_settings<key_type, hasher,
                                                      size_type, HT_MIN_BUCKETS>(
@@ -1209,7 +1204,7 @@ class sparse_hashtable {
     // Which key marks deleted entries.
     // TODO(csilvers): make a pointer, and get rid of use_deleted
     // (benchmark!)
-    typename base::remove_const<key_type>::type delkey;
+    typename std::remove_const<key_type>::type delkey;
   };
 
   // Utility functions to access the templated operators
@@ -1254,7 +1249,4 @@ template <class V, class K, class HF, class ExK, class SetK, class EqK, class A>
 const int sparse_hashtable<V, K, HF, ExK, SetK, EqK, A>::HT_EMPTY_PCT =
     static_cast<int>(
         0.4 * sparse_hashtable<V, K, HF, ExK, SetK, EqK, A>::HT_OCCUPANCY_PCT);
-
-_END_GOOGLE_NAMESPACE_
-
-#endif /* _SPARSEHASHTABLE_H_ */
+}

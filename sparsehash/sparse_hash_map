@@ -81,21 +81,18 @@
 // See /usr/(local/)?doc/sparsehash-*/sparse_hash_map.html
 // for information about how to use this class.
 
-#ifndef _SPARSE_HASH_MAP_H_
-#define _SPARSE_HASH_MAP_H_
+#pragma once
 
-#include <sparsehash/internal/sparseconfig.h>
-#include <algorithm>                        // needed by stl_alloc
-#include <functional>                       // for equal_to<>, select1st<>, etc
-#include <memory>                           // for alloc
-#include <utility>                          // for pair<>
+#include <algorithm>   // needed by stl_alloc
+#include <functional>  // for equal_to<>, select1st<>, etc
+#include <memory>      // for alloc
+#include <utility>     // for pair<>
 #include <sparsehash/internal/libc_allocator_with_realloc.h>
-#include <sparsehash/internal/sparsehashtable.h>       // IWYU pragma: export
-#include HASH_FUN_H                 // for hash<>
-_START_GOOGLE_NAMESPACE_
+#include <sparsehash/internal/sparsehashtable.h>  // IWYU pragma: export
 
-template <class Key, class T,
-          class HashFcn = SPARSEHASH_HASH<Key>,   // defined in sparseconfig.h
+namespace google {
+
+template <class Key, class T, class HashFcn = std::hash<Key>,
           class EqualKey = std::equal_to<Key>,
           class Alloc = libc_allocator_with_realloc<std::pair<const Key, T> > >
 class sparse_hash_map {
@@ -150,31 +147,30 @@ class sparse_hash_map {
   typedef typename ht::const_local_iterator const_local_iterator;
 
   // Iterator functions
-  iterator begin()                               { return rep.begin(); }
-  iterator end()                                 { return rep.end(); }
-  const_iterator begin() const                   { return rep.begin(); }
-  const_iterator end() const                     { return rep.end(); }
+  iterator begin() { return rep.begin(); }
+  iterator end() { return rep.end(); }
+  const_iterator begin() const { return rep.begin(); }
+  const_iterator end() const { return rep.end(); }
 
   // These come from tr1's unordered_map. For us, a bucket has 0 or 1 elements.
-  local_iterator begin(size_type i)              { return rep.begin(i); }
-  local_iterator end(size_type i)                { return rep.end(i); }
-  const_local_iterator begin(size_type i) const  { return rep.begin(i); }
-  const_local_iterator end(size_type i) const    { return rep.end(i); }
+  local_iterator begin(size_type i) { return rep.begin(i); }
+  local_iterator end(size_type i) { return rep.end(i); }
+  const_local_iterator begin(size_type i) const { return rep.begin(i); }
+  const_local_iterator end(size_type i) const { return rep.end(i); }
 
   // Accessor functions
-  allocator_type get_allocator() const           { return rep.get_allocator(); }
-  hasher hash_funct() const                      { return rep.hash_funct(); }
-  hasher hash_function() const                   { return hash_funct(); }
-  key_equal key_eq() const                       { return rep.key_eq(); }
-
+  allocator_type get_allocator() const { return rep.get_allocator(); }
+  hasher hash_funct() const { return rep.hash_funct(); }
+  hasher hash_function() const { return hash_funct(); }
+  key_equal key_eq() const { return rep.key_eq(); }
 
   // Constructors
   explicit sparse_hash_map(size_type expected_max_items_in_table = 0,
                            const hasher& hf = hasher(),
                            const key_equal& eql = key_equal(),
                            const allocator_type& alloc = allocator_type())
-    : rep(expected_max_items_in_table, hf, eql, SelectKey(), SetKey(), alloc) {
-  }
+      : rep(expected_max_items_in_table, hf, eql, SelectKey(), SetKey(),
+            alloc) {}
 
   template <class InputIterator>
   sparse_hash_map(InputIterator f, InputIterator l,
@@ -182,30 +178,28 @@ class sparse_hash_map {
                   const hasher& hf = hasher(),
                   const key_equal& eql = key_equal(),
                   const allocator_type& alloc = allocator_type())
-    : rep(expected_max_items_in_table, hf, eql, SelectKey(), SetKey(), alloc) {
+      : rep(expected_max_items_in_table, hf, eql, SelectKey(), SetKey(),
+            alloc) {
     rep.insert(f, l);
   }
   // We use the default copy constructor
   // We use the default operator=()
   // We use the default destructor
 
-  void clear()                        { rep.clear(); }
-  void swap(sparse_hash_map& hs)      { rep.swap(hs.rep); }
-
+  void clear() { rep.clear(); }
+  void swap(sparse_hash_map& hs) { rep.swap(hs.rep); }
 
   // Functions concerning size
-  size_type size() const              { return rep.size(); }
-  size_type max_size() const          { return rep.max_size(); }
-  bool empty() const                  { return rep.empty(); }
-  size_type bucket_count() const      { return rep.bucket_count(); }
-  size_type max_bucket_count() const  { return rep.max_bucket_count(); }
+  size_type size() const { return rep.size(); }
+  size_type max_size() const { return rep.max_size(); }
+  bool empty() const { return rep.empty(); }
+  size_type bucket_count() const { return rep.bucket_count(); }
+  size_type max_bucket_count() const { return rep.max_bucket_count(); }
 
   // These are tr1 methods.  bucket() is the bucket the key is or would be in.
-  size_type bucket_size(size_type i) const    { return rep.bucket_size(i); }
+  size_type bucket_size(size_type i) const { return rep.bucket_size(i); }
   size_type bucket(const key_type& key) const { return rep.bucket(key); }
-  float load_factor() const {
-    return size() * 1.0f / bucket_count();
-  }
+  float load_factor() const { return size() * 1.0f / bucket_count(); }
   float max_load_factor() const {
     float shrink, grow;
     rep.get_resizing_parameters(&shrink, &grow);
@@ -232,27 +226,27 @@ class sparse_hash_map {
     rep.set_resizing_parameters(shrink, grow);
   }
 
-  void resize(size_type hint)         { rep.resize(hint); }
-  void rehash(size_type hint)         { resize(hint); }      // the tr1 name
+  void resize(size_type hint) { rep.resize(hint); }
+  void rehash(size_type hint) { resize(hint); }  // the tr1 name
 
   // Lookup routines
-  iterator find(const key_type& key)                 { return rep.find(key); }
-  const_iterator find(const key_type& key) const     { return rep.find(key); }
+  iterator find(const key_type& key) { return rep.find(key); }
+  const_iterator find(const key_type& key) const { return rep.find(key); }
 
-  data_type& operator[](const key_type& key) {       // This is our value-add!
+  data_type& operator[](const key_type& key) {  // This is our value-add!
     // If key is in the hashtable, returns find(key)->second,
     // otherwise returns insert(value_type(key, T()).first->second.
     // Note it does not create an empty T unless the find fails.
     return rep.template find_or_insert<DefaultValue>(key).second;
   }
 
-  size_type count(const key_type& key) const         { return rep.count(key); }
+  size_type count(const key_type& key) const { return rep.count(key); }
 
   std::pair<iterator, iterator> equal_range(const key_type& key) {
     return rep.equal_range(key);
   }
-  std::pair<const_iterator, const_iterator> equal_range(const key_type& key)
-      const {
+  std::pair<const_iterator, const_iterator> equal_range(
+      const key_type& key) const {
     return rep.equal_range(key);
   }
 
@@ -260,37 +254,30 @@ class sparse_hash_map {
   std::pair<iterator, bool> insert(const value_type& obj) {
     return rep.insert(obj);
   }
-  template <class InputIterator> void insert(InputIterator f, InputIterator l) {
+  template <class InputIterator>
+  void insert(InputIterator f, InputIterator l) {
     rep.insert(f, l);
   }
-  void insert(const_iterator f, const_iterator l) {
-    rep.insert(f, l);
-  }
+  void insert(const_iterator f, const_iterator l) { rep.insert(f, l); }
   // Required for std::insert_iterator; the passed-in iterator is ignored.
-  iterator insert(iterator, const value_type& obj) {
-    return insert(obj).first;
-  }
+  iterator insert(iterator, const value_type& obj) { return insert(obj).first; }
 
   // Deletion routines
   // THESE ARE NON-STANDARD!  I make you specify an "impossible" key
   // value to identify deleted buckets.  You can change the key as
   // time goes on, or get rid of it entirely to be insert-only.
-  void set_deleted_key(const key_type& key)   {
-    rep.set_deleted_key(key);
-  }
-  void clear_deleted_key()                    { rep.clear_deleted_key(); }
-  key_type deleted_key() const                { return rep.deleted_key(); }
+  void set_deleted_key(const key_type& key) { rep.set_deleted_key(key); }
+  void clear_deleted_key() { rep.clear_deleted_key(); }
+  key_type deleted_key() const { return rep.deleted_key(); }
 
   // These are standard
-  size_type erase(const key_type& key)               { return rep.erase(key); }
-  void erase(iterator it)                            { rep.erase(it); }
-  void erase(iterator f, iterator l)                 { rep.erase(f, l); }
-
+  size_type erase(const key_type& key) { return rep.erase(key); }
+  void erase(iterator it) { rep.erase(it); }
+  void erase(iterator f, iterator l) { rep.erase(f, l); }
 
   // Comparison
-  bool operator==(const sparse_hash_map& hs) const   { return rep == hs.rep; }
-  bool operator!=(const sparse_hash_map& hs) const   { return rep != hs.rep; }
-
+  bool operator==(const sparse_hash_map& hs) const { return rep == hs.rep; }
+  bool operator!=(const sparse_hash_map& hs) const { return rep != hs.rep; }
 
   // I/O -- this is an add-on for writing metainformation to disk
   //
@@ -339,16 +326,24 @@ class sparse_hash_map {
   // The four methods below are DEPRECATED.
   // Use serialize() and unserialize() for new code.
   template <typename OUTPUT>
-  bool write_metadata(OUTPUT *fp)       { return rep.write_metadata(fp); }
+  bool write_metadata(OUTPUT* fp) {
+    return rep.write_metadata(fp);
+  }
 
   template <typename INPUT>
-  bool read_metadata(INPUT *fp)         { return rep.read_metadata(fp); }
+  bool read_metadata(INPUT* fp) {
+    return rep.read_metadata(fp);
+  }
 
   template <typename OUTPUT>
-  bool write_nopointer_data(OUTPUT *fp) { return rep.write_nopointer_data(fp); }
+  bool write_nopointer_data(OUTPUT* fp) {
+    return rep.write_nopointer_data(fp);
+  }
 
   template <typename INPUT>
-  bool read_nopointer_data(INPUT *fp)   { return rep.read_nopointer_data(fp); }
+  bool read_nopointer_data(INPUT* fp) {
+    return rep.read_nopointer_data(fp);
+  }
 };
 
 // We need a global swap as well
@@ -358,6 +353,4 @@ inline void swap(sparse_hash_map<Key, T, HashFcn, EqualKey, Alloc>& hm1,
   hm1.swap(hm2);
 }
 
-_END_GOOGLE_NAMESPACE_
-
-#endif /* _SPARSE_HASH_MAP_H_ */
+}  // namespace google

@@ -93,21 +93,18 @@
 // See /usr/(local/)?doc/sparsehash-*/dense_hash_map.html
 // for information about how to use this class.
 
-#ifndef _DENSE_HASH_MAP_H_
-#define _DENSE_HASH_MAP_H_
+#pragma once
 
-#include <sparsehash/internal/sparseconfig.h>
-#include <algorithm>                        // needed by stl_alloc
-#include <functional>                       // for equal_to<>, select1st<>, etc
-#include <memory>                           // for alloc
-#include <utility>                          // for pair<>
-#include <sparsehash/internal/densehashtable.h>        // IWYU pragma: export
+#include <algorithm>   // needed by stl_alloc
+#include <functional>  // for equal_to<>, select1st<>, etc
+#include <memory>      // for alloc
+#include <utility>     // for pair<>
+#include <sparsehash/internal/densehashtable.h>  // IWYU pragma: export
 #include <sparsehash/internal/libc_allocator_with_realloc.h>
-#include HASH_FUN_H                 // for hash<>
-_START_GOOGLE_NAMESPACE_
 
-template <class Key, class T,
-          class HashFcn = SPARSEHASH_HASH<Key>,   // defined in sparseconfig.h
+namespace google {
+
+template <class Key, class T, class HashFcn = std::hash<Key>,
           class EqualKey = std::equal_to<Key>,
           class Alloc = libc_allocator_with_realloc<std::pair<const Key, T> > >
 class dense_hash_map {
@@ -162,32 +159,30 @@ class dense_hash_map {
   typedef typename ht::const_local_iterator const_local_iterator;
 
   // Iterator functions
-  iterator begin()                               { return rep.begin(); }
-  iterator end()                                 { return rep.end(); }
-  const_iterator begin() const                   { return rep.begin(); }
-  const_iterator end() const                     { return rep.end(); }
-
+  iterator begin() { return rep.begin(); }
+  iterator end() { return rep.end(); }
+  const_iterator begin() const { return rep.begin(); }
+  const_iterator end() const { return rep.end(); }
 
   // These come from tr1's unordered_map. For us, a bucket has 0 or 1 elements.
-  local_iterator begin(size_type i)              { return rep.begin(i); }
-  local_iterator end(size_type i)                { return rep.end(i); }
-  const_local_iterator begin(size_type i) const  { return rep.begin(i); }
-  const_local_iterator end(size_type i) const    { return rep.end(i); }
+  local_iterator begin(size_type i) { return rep.begin(i); }
+  local_iterator end(size_type i) { return rep.end(i); }
+  const_local_iterator begin(size_type i) const { return rep.begin(i); }
+  const_local_iterator end(size_type i) const { return rep.end(i); }
 
   // Accessor functions
-  allocator_type get_allocator() const           { return rep.get_allocator(); }
-  hasher hash_funct() const                      { return rep.hash_funct(); }
-  hasher hash_function() const                   { return hash_funct(); }
-  key_equal key_eq() const                       { return rep.key_eq(); }
-
+  allocator_type get_allocator() const { return rep.get_allocator(); }
+  hasher hash_funct() const { return rep.hash_funct(); }
+  hasher hash_function() const { return hash_funct(); }
+  key_equal key_eq() const { return rep.key_eq(); }
 
   // Constructors
   explicit dense_hash_map(size_type expected_max_items_in_table = 0,
                           const hasher& hf = hasher(),
                           const key_equal& eql = key_equal(),
                           const allocator_type& alloc = allocator_type())
-    : rep(expected_max_items_in_table, hf, eql, SelectKey(), SetKey(), alloc) {
-  }
+      : rep(expected_max_items_in_table, hf, eql, SelectKey(), SetKey(),
+            alloc) {}
 
   template <class InputIterator>
   dense_hash_map(InputIterator f, InputIterator l,
@@ -196,7 +191,8 @@ class dense_hash_map {
                  const hasher& hf = hasher(),
                  const key_equal& eql = key_equal(),
                  const allocator_type& alloc = allocator_type())
-    : rep(expected_max_items_in_table, hf, eql, SelectKey(), SetKey(), alloc) {
+      : rep(expected_max_items_in_table, hf, eql, SelectKey(), SetKey(),
+            alloc) {
     set_empty_key(empty_key_val);
     rep.insert(f, l);
   }
@@ -204,26 +200,23 @@ class dense_hash_map {
   // We use the default operator=()
   // We use the default destructor
 
-  void clear()                        { rep.clear(); }
+  void clear() { rep.clear(); }
   // This clears the hash map without resizing it down to the minimum
   // bucket count, but rather keeps the number of buckets constant
-  void clear_no_resize()              { rep.clear_no_resize(); }
-  void swap(dense_hash_map& hs)       { rep.swap(hs.rep); }
-
+  void clear_no_resize() { rep.clear_no_resize(); }
+  void swap(dense_hash_map& hs) { rep.swap(hs.rep); }
 
   // Functions concerning size
-  size_type size() const              { return rep.size(); }
-  size_type max_size() const          { return rep.max_size(); }
-  bool empty() const                  { return rep.empty(); }
-  size_type bucket_count() const      { return rep.bucket_count(); }
-  size_type max_bucket_count() const  { return rep.max_bucket_count(); }
+  size_type size() const { return rep.size(); }
+  size_type max_size() const { return rep.max_size(); }
+  bool empty() const { return rep.empty(); }
+  size_type bucket_count() const { return rep.bucket_count(); }
+  size_type max_bucket_count() const { return rep.max_bucket_count(); }
 
   // These are tr1 methods.  bucket() is the bucket the key is or would be in.
-  size_type bucket_size(size_type i) const    { return rep.bucket_size(i); }
+  size_type bucket_size(size_type i) const { return rep.bucket_size(i); }
   size_type bucket(const key_type& key) const { return rep.bucket(key); }
-  float load_factor() const {
-    return size() * 1.0f / bucket_count();
-  }
+  float load_factor() const { return size() * 1.0f / bucket_count(); }
   float max_load_factor() const {
     float shrink, grow;
     rep.get_resizing_parameters(&shrink, &grow);
@@ -250,71 +243,65 @@ class dense_hash_map {
     rep.set_resizing_parameters(shrink, grow);
   }
 
-  void resize(size_type hint)         { rep.resize(hint); }
-  void rehash(size_type hint)         { resize(hint); }      // the tr1 name
+  void resize(size_type hint) { rep.resize(hint); }
+  void rehash(size_type hint) { resize(hint); }  // the tr1 name
 
   // Lookup routines
-  iterator find(const key_type& key)                 { return rep.find(key); }
-  const_iterator find(const key_type& key) const     { return rep.find(key); }
+  iterator find(const key_type& key) { return rep.find(key); }
+  const_iterator find(const key_type& key) const { return rep.find(key); }
 
-  data_type& operator[](const key_type& key) {       // This is our value-add!
+  data_type& operator[](const key_type& key) {  // This is our value-add!
     // If key is in the hashtable, returns find(key)->second,
     // otherwise returns insert(value_type(key, T()).first->second.
     // Note it does not create an empty T unless the find fails.
     return rep.template find_or_insert<DefaultValue>(key).second;
   }
 
-  size_type count(const key_type& key) const         { return rep.count(key); }
+  size_type count(const key_type& key) const { return rep.count(key); }
 
   std::pair<iterator, iterator> equal_range(const key_type& key) {
     return rep.equal_range(key);
   }
-  std::pair<const_iterator, const_iterator> equal_range(const key_type& key)
-      const {
+  std::pair<const_iterator, const_iterator> equal_range(
+      const key_type& key) const {
     return rep.equal_range(key);
   }
-
 
   // Insertion routines
   std::pair<iterator, bool> insert(const value_type& obj) {
     return rep.insert(obj);
   }
-  template <class InputIterator> void insert(InputIterator f, InputIterator l) {
+  template <class InputIterator>
+  void insert(InputIterator f, InputIterator l) {
     rep.insert(f, l);
   }
-  void insert(const_iterator f, const_iterator l) {
-    rep.insert(f, l);
-  }
+  void insert(const_iterator f, const_iterator l) { rep.insert(f, l); }
   // Required for std::insert_iterator; the passed-in iterator is ignored.
-  iterator insert(iterator, const value_type& obj) {
-    return insert(obj).first;
-  }
+  iterator insert(iterator, const value_type& obj) { return insert(obj).first; }
 
   // Deletion and empty routines
   // THESE ARE NON-STANDARD!  I make you specify an "impossible" key
   // value to identify deleted and empty buckets.  You can change the
   // deleted key as time goes on, or get rid of it entirely to be insert-only.
-  void set_empty_key(const key_type& key)   {           // YOU MUST CALL THIS!
-    rep.set_empty_key(value_type(key, data_type()));    // rep wants a value
+  void set_empty_key(const key_type& key) {           // YOU MUST CALL THIS!
+    rep.set_empty_key(value_type(key, data_type()));  // rep wants a value
   }
   key_type empty_key() const {
-    return rep.empty_key().first;                       // rep returns a value
+    return rep.empty_key().first;  // rep returns a value
   }
 
-  void set_deleted_key(const key_type& key)   { rep.set_deleted_key(key); }
-  void clear_deleted_key()                    { rep.clear_deleted_key(); }
-  key_type deleted_key() const                { return rep.deleted_key(); }
+  void set_deleted_key(const key_type& key) { rep.set_deleted_key(key); }
+  void clear_deleted_key() { rep.clear_deleted_key(); }
+  key_type deleted_key() const { return rep.deleted_key(); }
 
   // These are standard
-  size_type erase(const key_type& key)               { return rep.erase(key); }
-  void erase(iterator it)                            { rep.erase(it); }
-  void erase(iterator f, iterator l)                 { rep.erase(f, l); }
-
+  size_type erase(const key_type& key) { return rep.erase(key); }
+  void erase(iterator it) { rep.erase(it); }
+  void erase(iterator f, iterator l) { rep.erase(f, l); }
 
   // Comparison
-  bool operator==(const dense_hash_map& hs) const    { return rep == hs.rep; }
-  bool operator!=(const dense_hash_map& hs) const    { return rep != hs.rep; }
-
+  bool operator==(const dense_hash_map& hs) const { return rep == hs.rep; }
+  bool operator!=(const dense_hash_map& hs) const { return rep != hs.rep; }
 
   // I/O -- this is an add-on for writing hash map to disk
   //
@@ -364,6 +351,4 @@ inline void swap(dense_hash_map<Key, T, HashFcn, EqualKey, Alloc>& hm1,
   hm1.swap(hm2);
 }
 
-_END_GOOGLE_NAMESPACE_
-
-#endif /* _DENSE_HASH_MAP_H_ */
+}  // namespace google
