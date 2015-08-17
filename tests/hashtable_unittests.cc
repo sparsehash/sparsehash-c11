@@ -414,65 +414,67 @@ extern const int kDeletedInt = -1234676543;  // an unlikely-to-pick int
 extern const char* const kEmptyCharStar = "--empty char*--";
 extern const char* const kDeletedCharStar = "--deleted char*--";
 
-#define INT_HASHTABLES                                                        \
-  HashtableInterface_SparseHashMap<int, int, Hasher, Hasher, Alloc<int> >,    \
-      HashtableInterface_SparseHashSet<int, Hasher, Hasher,                   \
-                                       Alloc<int> >, /* This is a             \
-                                                        table where           \
-                                                        the key               \
-                                                        associated            \
-                                                        with a value          \
-                                                        is -value */          \
-      HashtableInterface_SparseHashtable<int, int, Hasher, Negation<int>,     \
-                                         SetKey<int, Negation<int> >, Hasher, \
-                                         Alloc<int> >,                        \
-      HashtableInterface_DenseHashMap<int, int, kEmptyInt, Hasher, Hasher,    \
-                                      Alloc<int> >,                           \
-      HashtableInterface_DenseHashSet<int, kEmptyInt, Hasher, Hasher,         \
-                                      Alloc<int> >,                           \
-      HashtableInterface_DenseHashtable<                                      \
-          int, int, kEmptyInt, Hasher, Negation<int>,                         \
-          SetKey<int, Negation<int> >, Hasher, Alloc<int> >
+#define INT_HASHTABLES                                                       \
+  HashtableInterface_SparseHashMap<int, int, Hasher, Hasher, Alloc<int>>,    \
+      HashtableInterface_SparseHashSet<                                      \
+          int, Hasher, Hasher,                                               \
+          Alloc<int>>, /* This is a                                          \
+                                                  table where                \
+                                                  the key                    \
+                                                  associated                 \
+                                                  with a value               \
+                                                  is -value */               \
+      HashtableInterface_SparseHashtable<int, int, Hasher, Negation<int>,    \
+                                         SetKey<int, Negation<int>>, Hasher, \
+                                         Alloc<int>>,                        \
+      HashtableInterface_DenseHashMap<int, int, kEmptyInt, Hasher, Hasher,   \
+                                      Alloc<int>>,                           \
+      HashtableInterface_DenseHashSet<int, kEmptyInt, Hasher, Hasher,        \
+                                      Alloc<int>>,                           \
+      HashtableInterface_DenseHashtable<                                     \
+          int, int, kEmptyInt, Hasher, Negation<int>,                        \
+          SetKey<int, Negation<int>>, Hasher, Alloc<int>>
 
 #define STRING_HASHTABLES                                                     \
   HashtableInterface_SparseHashMap<string, string, Hasher, Hasher,            \
-                                   Alloc<string> >,                           \
+                                   Alloc<string>>,                            \
       HashtableInterface_SparseHashSet<                                       \
           string, Hasher, Hasher,                                             \
-          Alloc<string> >, /* This is a table where the key                   \
-                              associated with a value is                      \
-                              Cap(value) */                                   \
+          Alloc<string>>, /* This is a table where the key                    \
+                                                     associated with a value  \
+                             is                                               \
+                                                     Cap(value) */            \
       HashtableInterface_SparseHashtable<string, string, Hasher, Capital,     \
                                          SetKey<string, Capital>, Hasher,     \
-                                         Alloc<string> >,                     \
+                                         Alloc<string>>,                      \
       HashtableInterface_DenseHashMap<string, string, kEmptyString, Hasher,   \
-                                      Hasher, Alloc<string> >,                \
+                                      Hasher, Alloc<string>>,                 \
       HashtableInterface_DenseHashSet<string, kEmptyString, Hasher, Hasher,   \
-                                      Alloc<string> >,                        \
+                                      Alloc<string>>,                         \
       HashtableInterface_DenseHashtable<string, string, kEmptyString, Hasher, \
                                         Capital, SetKey<string, Capital>,     \
-                                        Hasher, Alloc<string> >
+                                        Hasher, Alloc<string>>
 
 // I'd like to use ValueType keys for SparseHashtable<> and
 // DenseHashtable<> but I can't due to memory-management woes (nobody
 // really owns the char* involved).  So instead I do something simpler.
-#define CHARSTAR_HASHTABLES                                                    \
-  HashtableInterface_SparseHashMap<const char*, ValueType, Hasher, Hasher,     \
-                                   Alloc<const char*> >,                       \
-      HashtableInterface_SparseHashSet<                                        \
-          const char*, Hasher, Hasher,                                         \
-          Alloc<const char*> >, /* This is a table where each value is its own \
-                                   key. */                                     \
-      HashtableInterface_SparseHashtable<                                      \
-          const char*, const char*, Hasher, Identity,                          \
-          SetKey<const char*, Identity>, Hasher, Alloc<const char*> >,         \
-      HashtableInterface_DenseHashMap<const char*, ValueType, kEmptyCharStar,  \
-                                      Hasher, Hasher, Alloc<const char*> >,    \
-      HashtableInterface_DenseHashSet<const char*, kEmptyCharStar, Hasher,     \
-                                      Hasher, Alloc<const char*> >,            \
-      HashtableInterface_DenseHashtable<                                       \
-          const char*, const char*, kEmptyCharStar, Hasher, Identity,          \
-          SetKey<const char*, Identity>, Hasher, Alloc<ValueType> >
+#define CHARSTAR_HASHTABLES                                                   \
+  HashtableInterface_SparseHashMap<const char*, ValueType, Hasher, Hasher,    \
+                                   Alloc<const char*>>,                       \
+      HashtableInterface_SparseHashSet<                                       \
+          const char*, Hasher, Hasher,                                        \
+          Alloc<const char*>>, /* This is a table where each value is its own \
+                                                          key. */             \
+      HashtableInterface_SparseHashtable<                                     \
+          const char*, const char*, Hasher, Identity,                         \
+          SetKey<const char*, Identity>, Hasher, Alloc<const char*>>,         \
+      HashtableInterface_DenseHashMap<const char*, ValueType, kEmptyCharStar, \
+                                      Hasher, Hasher, Alloc<const char*>>,    \
+      HashtableInterface_DenseHashSet<const char*, kEmptyCharStar, Hasher,    \
+                                      Hasher, Alloc<const char*>>,            \
+      HashtableInterface_DenseHashtable<                                      \
+          const char*, const char*, kEmptyCharStar, Hasher, Identity,         \
+          SetKey<const char*, Identity>, Hasher, Alloc<ValueType>>
 
 // This is the list of types we run each test against.
 // We need to define the same class 4 times due to limitations in the
@@ -922,9 +924,9 @@ TYPED_TEST(HashtableAllTest, Size) {
 TEST(HashtableTest, MaxSizeAndMaxBucketCount) {
   // The max size depends on the allocator.  So we can't use the
   // built-in allocator type; instead, we make our own types.
-  sparse_hash_set<int, Hasher, Hasher, Alloc<int> > ht_default;
-  sparse_hash_set<int, Hasher, Hasher, Alloc<int, unsigned char> > ht_char;
-  sparse_hash_set<int, Hasher, Hasher, Alloc<int, unsigned char, 104> > ht_104;
+  sparse_hash_set<int, Hasher, Hasher, Alloc<int>> ht_default;
+  sparse_hash_set<int, Hasher, Hasher, Alloc<int, unsigned char>> ht_char;
+  sparse_hash_set<int, Hasher, Hasher, Alloc<int, unsigned char, 104>> ht_104;
 
   EXPECT_GE(ht_default.max_size(), 256u);
   EXPECT_EQ(255u, ht_char.max_size());
@@ -1257,14 +1259,14 @@ TEST(HashtableTest, InsertValueToMap) {
   pair<sparse_hash_map<int, int>::iterator, bool> shm_it;
   shm[1] = 2;  // test a different method of inserting
   shm_it = shm.insert(pair<int, int>(1, 3));
-  EXPECT_EQ(false, shm_it.second);
+  EXPECT_FALSE(shm_it.second);
   EXPECT_EQ(1, shm_it.first->first);
   EXPECT_EQ(2, shm_it.first->second);
   shm_it.first->second = 20;
   EXPECT_EQ(20, shm[1]);
 
   shm_it = shm.insert(pair<int, int>(2, 4));
-  EXPECT_EQ(true, shm_it.second);
+  EXPECT_TRUE(shm_it.second);
   EXPECT_EQ(2, shm_it.first->first);
   EXPECT_EQ(4, shm_it.first->second);
   EXPECT_EQ(4, shm[2]);
@@ -1275,14 +1277,14 @@ TEST(HashtableTest, InsertValueToMap) {
   pair<dense_hash_map<int, int>::iterator, bool> dhm_it;
   dhm[1] = 2;  // test a different method of inserting
   dhm_it = dhm.insert(pair<const int, int>(1, 3));
-  EXPECT_EQ(false, dhm_it.second);
+  EXPECT_FALSE(dhm_it.second);
   EXPECT_EQ(1, dhm_it.first->first);
   EXPECT_EQ(2, dhm_it.first->second);
   dhm_it.first->second = 20;
   EXPECT_EQ(20, dhm[1]);
 
   dhm_it = dhm.insert(pair<const int, int>(2, 4));
-  EXPECT_EQ(true, dhm_it.second);
+  EXPECT_TRUE(dhm_it.second);
   EXPECT_EQ(2, dhm_it.first->first);
   EXPECT_EQ(4, dhm_it.first->second);
   EXPECT_EQ(4, dhm[2]);
@@ -1817,8 +1819,8 @@ TEST(HashtableDeathTest, InsertSizeTypeOverflow) {
     test_data[i] = i + 1000;
   }
 
-  sparse_hash_set<int, Hasher, Hasher, Alloc<int, uint8, 10> > shs;
-  dense_hash_set<int, Hasher, Hasher, Alloc<int, uint8, 10> > dhs;
+  sparse_hash_set<int, Hasher, Hasher, Alloc<int, uint8, 10>> shs;
+  dense_hash_set<int, Hasher, Hasher, Alloc<int, uint8, 10>> dhs;
   dhs.set_empty_key(-1);
 
   // Test we are using the correct allocator
@@ -1839,8 +1841,8 @@ TEST(HashtableDeathTest, InsertMaxSizeOverflow) {
     test_data[i] = i + 1000;
   }
 
-  sparse_hash_set<int, Hasher, Hasher, Alloc<int, uint8, 10> > shs;
-  dense_hash_set<int, Hasher, Hasher, Alloc<int, uint8, 10> > dhs;
+  sparse_hash_set<int, Hasher, Hasher, Alloc<int, uint8, 10>> shs;
+  dense_hash_set<int, Hasher, Hasher, Alloc<int, uint8, 10>> dhs;
   dhs.set_empty_key(-1);
 
   // Test max_size overflow
@@ -1852,8 +1854,8 @@ TEST(HashtableDeathTest, InsertMaxSizeOverflow) {
 
 TEST(HashtableDeathTest, ResizeSizeTypeOverflow) {
   // Test min-buckets overflow, when we want to resize too close to size_type
-  sparse_hash_set<int, Hasher, Hasher, Alloc<int, uint8, 10> > shs;
-  dense_hash_set<int, Hasher, Hasher, Alloc<int, uint8, 10> > dhs;
+  sparse_hash_set<int, Hasher, Hasher, Alloc<int, uint8, 10>> shs;
+  dense_hash_set<int, Hasher, Hasher, Alloc<int, uint8, 10>> dhs;
   dhs.set_empty_key(-1);
 
   EXPECT_THROW(dhs.resize(250), std::length_error);  // 9+250 > 256
@@ -1867,8 +1869,8 @@ TEST(HashtableDeathTest, ResizeDeltaOverflow) {
     test_data[i] = i + 1000;
   }
 
-  sparse_hash_set<int, Hasher, Hasher, Alloc<int, uint8, 255> > shs;
-  dense_hash_set<int, Hasher, Hasher, Alloc<int, uint8, 255> > dhs;
+  sparse_hash_set<int, Hasher, Hasher, Alloc<int, uint8, 255>> shs;
+  dense_hash_set<int, Hasher, Hasher, Alloc<int, uint8, 255>> dhs;
   dhs.set_empty_key(-1);
   for (int i = 0; i < 9; i++) {
     dhs.insert(i);
@@ -1912,16 +1914,18 @@ struct NoMemmove {
 int NoMemmove::num_copies = 0;
 
 // This is what tells the hashtable code it can use memmove for this class:
+namespace std {
 template <>
-struct std::is_trivially_copy_constructible<Memmove> : true_type {};
+struct is_trivially_copy_constructible<Memmove> : true_type {};
 template <>
-struct std::is_trivially_destructible<Memmove> : true_type {};
+struct is_trivially_destructible<Memmove> : true_type {};
+}
 
 TEST(HashtableTest, SimpleDataTypeOptimizations) {
   // Only sparsehashtable optimizes moves in this way.
   sparse_hash_map<int, Memmove, Hasher, Hasher> memmove;
   sparse_hash_map<int, NoMemmove, Hasher, Hasher> nomemmove;
-  sparse_hash_map<int, Memmove, Hasher, Hasher, Alloc<int> >
+  sparse_hash_map<int, Memmove, Hasher, Hasher, Alloc<int>>
       memmove_nonstandard_alloc;
 
   Memmove::num_copies = 0;
