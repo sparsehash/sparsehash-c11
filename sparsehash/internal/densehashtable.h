@@ -1197,7 +1197,7 @@ class dense_hashtable {
         fprintf(stderr,
                 "sparsehash: FATAL ERROR: failed to reallocate "
                 "%lu elements for ptr %p",
-                static_cast<unsigned long>(n), ptr);
+                static_cast<unsigned long>(n), static_cast<void*>(ptr));
         exit(1);
       }
       return retval;
