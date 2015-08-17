@@ -1,7 +1,7 @@
 TEST_DIR = tests
 
 CPPFLAGS += -I$(TEST_DIR) -I. -isystem $(TEST_DIR)/gtest
-CXXFLAGS += -Wall -Wextra -Wpedantic -Wno-missing-field-initializers -std=c++11 -g -O3
+CXXFLAGS += -Wall -Wextra -Wpedantic -Wno-missing-field-initializers -std=c++11 -O3
 LDFLAGS += -lpthread
 
 all : sparsehash_unittests bench
