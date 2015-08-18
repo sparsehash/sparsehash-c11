@@ -110,7 +110,7 @@ namespace google {
 
 template <class Value, class HashFcn = std::hash<Value>,
           class EqualKey = std::equal_to<Value>,
-          class Alloc = libc_allocator_with_realloc<Value> >
+          class Alloc = libc_allocator_with_realloc<Value>>
 class dense_hash_set {
  private:
   // Apparently identity is not stl-standard, so we define our own

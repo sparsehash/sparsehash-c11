@@ -844,10 +844,10 @@ class sparsegroup {
   typedef typename value_alloc_type::pointer pointer;
   typedef typename value_alloc_type::const_pointer const_pointer;
 
-  typedef table_iterator<sparsegroup<T, GROUP_SIZE, Alloc> > iterator;
-  typedef const_table_iterator<sparsegroup<T, GROUP_SIZE, Alloc> >
+  typedef table_iterator<sparsegroup<T, GROUP_SIZE, Alloc>> iterator;
+  typedef const_table_iterator<sparsegroup<T, GROUP_SIZE, Alloc>>
       const_iterator;
-  typedef table_element_adaptor<sparsegroup<T, GROUP_SIZE, Alloc> >
+  typedef table_element_adaptor<sparsegroup<T, GROUP_SIZE, Alloc>>
       element_adaptor;
   typedef u_int16_t size_type;  // max # of buckets
   typedef int16_t difference_type;
@@ -1141,7 +1141,7 @@ class sparsegroup {
           bool, (std::is_trivially_copy_constructible<value_type>::value &&
                  std::is_trivially_destructible<value_type>::value &&
                  std::is_same<allocator_type,
-                              libc_allocator_with_realloc<value_type> >::value)>
+                              libc_allocator_with_realloc<value_type>>::value)>
           realloc_and_memmove_ok;  // we pretend mv(x,y) == "x.~T();
                                    // new(x) T(y)"
       set_aux(offset, realloc_and_memmove_ok());
@@ -1208,7 +1208,7 @@ class sparsegroup {
             (std::is_trivially_copy_constructible<value_type>::value &&
              std::is_trivially_destructible<value_type>::value &&
              std::is_same<allocator_type,
-                          libc_allocator_with_realloc<value_type> >::value)>
+                          libc_allocator_with_realloc<value_type>>::value)>
             realloc_and_memmove_ok;  // pretend mv(x,y) == "x.~T();
                                      // new(x) T(y)"
         erase_aux(offset, realloc_and_memmove_ok());
@@ -1324,7 +1324,7 @@ class sparsegroup {
   // A template specialization of alloc_impl for
   // libc_allocator_with_realloc that can handle realloc_or_die.
   template <class A>
-  class alloc_impl<libc_allocator_with_realloc<A> >
+  class alloc_impl<libc_allocator_with_realloc<A>>
       : public libc_allocator_with_realloc<A> {
    public:
     typedef typename libc_allocator_with_realloc<A>::pointer pointer;
@@ -1377,12 +1377,12 @@ inline void swap(sparsegroup<T, GROUP_SIZE, Alloc>& x,
 // ---------------------------------------------------------------------------
 
 template <class T, u_int16_t GROUP_SIZE = DEFAULT_SPARSEGROUP_SIZE,
-          class Alloc = libc_allocator_with_realloc<T> >
+          class Alloc = libc_allocator_with_realloc<T>>
 class sparsetable {
  private:
   typedef typename Alloc::template rebind<T>::other value_alloc_type;
   typedef typename Alloc::template rebind<
-      sparsegroup<T, GROUP_SIZE, value_alloc_type> >::other vector_alloc;
+      sparsegroup<T, GROUP_SIZE, value_alloc_type>>::other vector_alloc;
 
  public:
   // Basic types
@@ -1394,10 +1394,10 @@ class sparsetable {
   typedef typename value_alloc_type::const_reference const_reference;
   typedef typename value_alloc_type::pointer pointer;
   typedef typename value_alloc_type::const_pointer const_pointer;
-  typedef table_iterator<sparsetable<T, GROUP_SIZE, Alloc> > iterator;
-  typedef const_table_iterator<sparsetable<T, GROUP_SIZE, Alloc> >
+  typedef table_iterator<sparsetable<T, GROUP_SIZE, Alloc>> iterator;
+  typedef const_table_iterator<sparsetable<T, GROUP_SIZE, Alloc>>
       const_iterator;
-  typedef table_element_adaptor<sparsetable<T, GROUP_SIZE, Alloc> >
+  typedef table_element_adaptor<sparsetable<T, GROUP_SIZE, Alloc>>
       element_adaptor;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
   typedef std::reverse_iterator<iterator> reverse_iterator;  // from iterator.h
@@ -1405,17 +1405,17 @@ class sparsetable {
   // These are our special iterators, that go over non-empty buckets in a
   // table.  These aren't const only because you can change non-empty bcks.
   typedef two_d_iterator<std::vector<
-      sparsegroup<value_type, GROUP_SIZE, value_alloc_type>, vector_alloc> >
+      sparsegroup<value_type, GROUP_SIZE, value_alloc_type>, vector_alloc>>
       nonempty_iterator;
   typedef const_two_d_iterator<std::vector<
-      sparsegroup<value_type, GROUP_SIZE, value_alloc_type>, vector_alloc> >
+      sparsegroup<value_type, GROUP_SIZE, value_alloc_type>, vector_alloc>>
       const_nonempty_iterator;
   typedef std::reverse_iterator<nonempty_iterator> reverse_nonempty_iterator;
   typedef std::reverse_iterator<const_nonempty_iterator>
       const_reverse_nonempty_iterator;
   // Another special iterator: it frees memory as it iterates (used to resize)
   typedef destructive_two_d_iterator<std::vector<
-      sparsegroup<value_type, GROUP_SIZE, value_alloc_type>, vector_alloc> >
+      sparsegroup<value_type, GROUP_SIZE, value_alloc_type>, vector_alloc>>
       destructive_iterator;
 
   // Iterator functions

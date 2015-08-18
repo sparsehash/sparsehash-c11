@@ -773,7 +773,7 @@ class dense_hashtable {
       if (new_num_buckets != num_buckets) {  // resize, if necessary
         typedef std::integral_constant<
             bool, std::is_same<value_alloc_type,
-                               libc_allocator_with_realloc<value_type> >::value>
+                               libc_allocator_with_realloc<value_type>>::value>
             realloc_ok;
         resize_table(num_buckets, new_num_buckets, realloc_ok());
       }
@@ -1182,7 +1182,7 @@ class dense_hashtable {
   // A template specialization of alloc_impl for
   // libc_allocator_with_realloc that can handle realloc_or_die.
   template <class A>
-  class alloc_impl<libc_allocator_with_realloc<A> >
+  class alloc_impl<libc_allocator_with_realloc<A>>
       : public libc_allocator_with_realloc<A> {
    public:
     typedef typename libc_allocator_with_realloc<A>::pointer pointer;
