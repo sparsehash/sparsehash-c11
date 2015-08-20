@@ -235,6 +235,7 @@
 #include <type_traits>
 #include <sparsehash/internal/hashtable-common.h>
 #include <sparsehash/internal/libc_allocator_with_realloc.h>
+#include <sparsehash/traits>
 
 namespace google {
 // The smaller this is, the faster lookup is (because the group bitmap is
@@ -832,13 +833,21 @@ class destructive_two_d_iterator {
 
 template <class T, u_int16_t GROUP_SIZE, class Alloc>
 class sparsegroup {
- private:
-  typedef typename Alloc::template rebind<T>::other value_alloc_type;
-
  public:
-  // Basic types
   typedef T value_type;
   typedef Alloc allocator_type;
+
+ private:
+  using value_alloc_type =
+      typename std::allocator_traits<Alloc>::template rebind_alloc<T>;
+  typedef std::integral_constant<
+      bool, (is_relocatable<value_type>::value &&
+             std::is_same<allocator_type,
+                          libc_allocator_with_realloc<value_type>>::value)>
+      realloc_and_memmove_ok;  // we pretend mv(x,y) == "x.~T();
+                               // new(x) T(y)"
+ public:
+  // Basic types
   typedef typename value_alloc_type::reference reference;
   typedef typename value_alloc_type::const_reference const_reference;
   typedef typename value_alloc_type::pointer pointer;
@@ -1137,13 +1146,6 @@ class sparsegroup {
       // Delete the old value, which we're replacing with the new one
       group[offset].~value_type();
     } else {
-      typedef std::integral_constant<
-          bool, (std::is_trivially_copy_constructible<value_type>::value &&
-                 std::is_trivially_destructible<value_type>::value &&
-                 std::is_same<allocator_type,
-                              libc_allocator_with_realloc<value_type>>::value)>
-          realloc_and_memmove_ok;  // we pretend mv(x,y) == "x.~T();
-                                   // new(x) T(y)"
       set_aux(offset, realloc_and_memmove_ok());
       ++settings.num_buckets;
       bmset(i);
@@ -1203,14 +1205,6 @@ class sparsegroup {
         free_group();
         group = NULL;
       } else {
-        typedef std::integral_constant<
-            bool,
-            (std::is_trivially_copy_constructible<value_type>::value &&
-             std::is_trivially_destructible<value_type>::value &&
-             std::is_same<allocator_type,
-                          libc_allocator_with_realloc<value_type>>::value)>
-            realloc_and_memmove_ok;  // pretend mv(x,y) == "x.~T();
-                                     // new(x) T(y)"
         erase_aux(offset, realloc_and_memmove_ok());
       }
       --settings.num_buckets;
@@ -1380,9 +1374,11 @@ template <class T, u_int16_t GROUP_SIZE = DEFAULT_SPARSEGROUP_SIZE,
           class Alloc = libc_allocator_with_realloc<T>>
 class sparsetable {
  private:
-  typedef typename Alloc::template rebind<T>::other value_alloc_type;
-  typedef typename Alloc::template rebind<
-      sparsegroup<T, GROUP_SIZE, value_alloc_type>>::other vector_alloc;
+  using value_alloc_type =
+      typename std::allocator_traits<Alloc>::template rebind_alloc<T>;
+  using vector_alloc =
+      typename std::allocator_traits<Alloc>::template rebind_alloc<
+          sparsegroup<T, GROUP_SIZE, value_alloc_type>>;
 
  public:
   // Basic types
@@ -1466,7 +1462,10 @@ class sparsetable {
   }
 
   typedef sparsegroup<value_type, GROUP_SIZE, allocator_type> group_type;
-  typedef std::vector<group_type, vector_alloc> group_vector_type;
+  using group_vector_type_allocator_type =
+      typename std::allocator_traits<Alloc>::template rebind_alloc<group_type>;
+  typedef std::vector<group_type, group_vector_type_allocator_type>
+      group_vector_type;
 
   typedef typename group_vector_type::reference GroupsReference;
   typedef typename group_vector_type::const_reference GroupsConstReference;

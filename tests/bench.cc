@@ -239,14 +239,11 @@ class HashObject<sizeof(int), sizeof(int)> {
   int i_;  // the key used for hashing
 };
 
-namespace std {
+namespace google {
 // Let the hashtable implementations know it can use an optimized memcpy,
 // because the compiler defines both the destructor and copy constructor.
 template <int Size, int Hashsize>
-struct is_trivially_copy_constructible<HashObject<Size, Hashsize>> : true_type {
-};
-template <int Size, int Hashsize>
-struct is_trivially_destructible<HashObject<Size, Hashsize>> : true_type {};
+struct is_relocatable<HashObject<Size, Hashsize>> : std::true_type {};
 }
 
 class HashFn {

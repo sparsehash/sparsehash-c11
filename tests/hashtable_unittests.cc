@@ -414,16 +414,10 @@ extern const int kDeletedInt = -1234676543;  // an unlikely-to-pick int
 extern const char* const kEmptyCharStar = "--empty char*--";
 extern const char* const kDeletedCharStar = "--deleted char*--";
 
+// Third table has key associated with a value of -value
 #define INT_HASHTABLES                                                       \
   HashtableInterface_SparseHashMap<int, int, Hasher, Hasher, Alloc<int>>,    \
-      HashtableInterface_SparseHashSet<                                      \
-          int, Hasher, Hasher,                                               \
-          Alloc<int>>, /* This is a                                          \
-                                                     table where             \
-                                                     the key                 \
-                                                     associated              \
-                                                     with a value            \
-                                                     is -value */            \
+      HashtableInterface_SparseHashSet<int, Hasher, Hasher, Alloc<int>>,     \
       HashtableInterface_SparseHashtable<int, int, Hasher, Negation<int>,    \
                                          SetKey<int, Negation<int>>, Hasher, \
                                          Alloc<int>>,                        \
@@ -435,37 +429,31 @@ extern const char* const kDeletedCharStar = "--deleted char*--";
           int, int, kEmptyInt, Hasher, Negation<int>,                        \
           SetKey<int, Negation<int>>, Hasher, Alloc<int>>
 
-#define STRING_HASHTABLES                                                     \
-  HashtableInterface_SparseHashMap<string, string, Hasher, Hasher,            \
-                                   Alloc<string>>,                            \
-      HashtableInterface_SparseHashSet<                                       \
-          string, Hasher, Hasher,                                             \
-          Alloc<string>>, /* This is a table where the key                    \
-                                                        associated with a     \
-                             value                                            \
-                                is                                            \
-                                                        Cap(value) */         \
-      HashtableInterface_SparseHashtable<string, string, Hasher, Capital,     \
-                                         SetKey<string, Capital>, Hasher,     \
-                                         Alloc<string>>,                      \
-      HashtableInterface_DenseHashMap<string, string, kEmptyString, Hasher,   \
-                                      Hasher, Alloc<string>>,                 \
-      HashtableInterface_DenseHashSet<string, kEmptyString, Hasher, Hasher,   \
-                                      Alloc<string>>,                         \
-      HashtableInterface_DenseHashtable<string, string, kEmptyString, Hasher, \
-                                        Capital, SetKey<string, Capital>,     \
+// Third table has key associated with a value of Cap(value)
+#define STRING_HASHTABLES                                                      \
+  HashtableInterface_SparseHashMap<string, string, Hasher, Hasher,             \
+                                   Alloc<string>>,                             \
+      HashtableInterface_SparseHashSet<string, Hasher, Hasher, Alloc<string>>, \
+      HashtableInterface_SparseHashtable<string, string, Hasher, Capital,      \
+                                         SetKey<string, Capital>, Hasher,      \
+                                         Alloc<string>>,                       \
+      HashtableInterface_DenseHashMap<string, string, kEmptyString, Hasher,    \
+                                      Hasher, Alloc<string>>,                  \
+      HashtableInterface_DenseHashSet<string, kEmptyString, Hasher, Hasher,    \
+                                      Alloc<string>>,                          \
+      HashtableInterface_DenseHashtable<string, string, kEmptyString, Hasher,  \
+                                        Capital, SetKey<string, Capital>,      \
                                         Hasher, Alloc<string>>
 
 // I'd like to use ValueType keys for SparseHashtable<> and
 // DenseHashtable<> but I can't due to memory-management woes (nobody
 // really owns the char* involved).  So instead I do something simpler.
+// Third table has a value equal to its key
 #define CHARSTAR_HASHTABLES                                                   \
   HashtableInterface_SparseHashMap<const char*, ValueType, Hasher, Hasher,    \
                                    Alloc<const char*>>,                       \
-      HashtableInterface_SparseHashSet<                                       \
-          const char*, Hasher, Hasher,                                        \
-          Alloc<const char*>>, /* This is a table where each value is its own \
-                                                             key. */          \
+      HashtableInterface_SparseHashSet<const char*, Hasher, Hasher,           \
+                                       Alloc<const char*>>,                   \
       HashtableInterface_SparseHashtable<                                     \
           const char*, const char*, Hasher, Identity,                         \
           SetKey<const char*, Identity>, Hasher, Alloc<const char*>>,         \
@@ -1915,11 +1903,9 @@ struct NoMemmove {
 int NoMemmove::num_copies = 0;
 
 // This is what tells the hashtable code it can use memmove for this class:
-namespace std {
+namespace google {
 template <>
-struct is_trivially_copy_constructible<Memmove> : true_type {};
-template <>
-struct is_trivially_destructible<Memmove> : true_type {};
+struct is_relocatable<Memmove> : std::true_type {};
 }
 
 TEST(HashtableTest, SimpleDataTypeOptimizations) {
