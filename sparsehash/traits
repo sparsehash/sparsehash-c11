@@ -53,3 +53,13 @@ struct is_relocatable<std::pair<T, U>>
 template <class T>
 struct is_relocatable<const T> : is_relocatable<T> {};
 }
+
+
+#if defined _WIN32 || defined __CYGWIN__
+    #ifndef __GNUC__
+      #define _SPARSE_ATTR_UNUSED_
+      #pragma warning(disable : 4503)
+    #endif
+#else
+    #define _SPARSE_ATTR_UNUSED_ __attribute__((unused))
+#endif
