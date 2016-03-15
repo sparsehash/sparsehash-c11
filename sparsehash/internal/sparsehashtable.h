@@ -121,7 +121,7 @@ namespace google {
 // smaller) and the faster insert is, because there's less to move.
 // On the other hand, there are more groups.  Since group::size_type is
 // a short, this number should be of the form 32*x + 16 to avoid waste.
-static const u_int16_t DEFAULT_GROUP_SIZE = 48;  // fits in 1.5 words
+static const uint16_t DEFAULT_GROUP_SIZE = 48;  // fits in 1.5 words
 
 // Hashtable class, used to implement the hashed associative containers
 // hash_set and hash_map.
