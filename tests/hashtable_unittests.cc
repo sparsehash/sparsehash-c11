@@ -64,6 +64,7 @@ using std::pair;
 using std::set;
 using std::string;
 using std::vector;
+using std::swap;
 using google::dense_hash_map;
 using google::dense_hash_set;
 using google::sparse_hash_map;
@@ -80,6 +81,11 @@ namespace sparsehash_internal = google::sparsehash_internal;
 using namespace testing;
 
 typedef unsigned char uint8;
+
+#ifdef _MSC_VER
+    // 4503 keeps quiet errors "decorated name length exceeded"
+    #pragma warning(disable : 4503)
+#endif
 
 // #ifdef _MSC_VER
 // // Below, we purposefully test having a very small allocator size.
@@ -222,10 +228,10 @@ struct Alloc {
     typedef Alloc<U, SizeT, MAX_SIZE> other;
   };
 
-  bool operator==(const Alloc<T, SizeT, MAX_SIZE>& that) {
+  bool operator==(const Alloc<T, SizeT, MAX_SIZE>& that) const {
     return this->id_ == that.id_ && this->count_ == that.count_;
   }
-  bool operator!=(const Alloc<T, SizeT, MAX_SIZE>& that) {
+  bool operator!=(const Alloc<T, SizeT, MAX_SIZE>& that) const {
     return !this->operator==(that);
   }
 
@@ -553,10 +559,6 @@ TYPED_TEST(HashtableIntTest, Typedefs) {
   typename TypeParam::difference_type dt;
   typename TypeParam::pointer p;
   typename TypeParam::const_pointer cp;
-  // I can't declare variables of reference-type, since I have nothing
-  // to point them to, so I just make sure that these types exist.
-  __attribute__((unused)) typedef typename TypeParam::reference r;
-  __attribute__((unused)) typedef typename TypeParam::const_reference cf;
 
   typename TypeParam::iterator i;
   typename TypeParam::const_iterator ci;

@@ -242,7 +242,7 @@ namespace google {
 // smaller) and the faster insert is, because there's less to move.
 // On the other hand, there are more groups.  Since group::size_type is
 // a short, this number should be of the form 32*x + 16 to avoid waste.
-static const u_int16_t DEFAULT_SPARSEGROUP_SIZE = 48;  // fits in 1.5 words
+static const uint16_t DEFAULT_SPARSEGROUP_SIZE = 48;  // fits in 1.5 words
 
 // Our iterator as simple as iterators can be: basically it's just
 // the index into our table.  Dereference, the only complicated
@@ -831,7 +831,7 @@ class destructive_two_d_iterator {
 // the array (from 1 .. # of non-empty buckets in the group) is
 // called its "offset."
 
-template <class T, u_int16_t GROUP_SIZE, class Alloc>
+template <class T, uint16_t GROUP_SIZE, class Alloc>
 class sparsegroup {
  public:
   typedef T value_type;
@@ -858,7 +858,7 @@ class sparsegroup {
       const_iterator;
   typedef table_element_adaptor<sparsegroup<T, GROUP_SIZE, Alloc>>
       element_adaptor;
-  typedef u_int16_t size_type;  // max # of buckets
+  typedef uint16_t size_type;  // max # of buckets
   typedef int16_t difference_type;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
   typedef std::reverse_iterator<iterator> reverse_iterator;  // from iterator.h
@@ -1227,7 +1227,7 @@ class sparsegroup {
 
   template <typename OUTPUT>
   bool write_metadata(OUTPUT* fp) const {
-    // we explicitly set to u_int16_t
+    // we explicitly set to uint16_t
     assert(sizeof(settings.num_buckets) == 2);
     if (!sparsehash_internal::write_bigendian_number(fp, settings.num_buckets,
                                                      2))
@@ -1346,12 +1346,12 @@ class sparsegroup {
   // operator= and swap.
   class Settings : public alloc_impl<value_alloc_type> {
    public:
-    Settings(const alloc_impl<value_alloc_type>& a, u_int16_t n = 0)
+    Settings(const alloc_impl<value_alloc_type>& a, uint16_t n = 0)
         : alloc_impl<value_alloc_type>(a), num_buckets(n) {}
     Settings(const Settings& s)
         : alloc_impl<value_alloc_type>(s), num_buckets(s.num_buckets) {}
 
-    u_int16_t num_buckets;  // limits GROUP_SIZE to 64K
+    uint16_t num_buckets;  // limits GROUP_SIZE to 64K
   };
 
   // The actual data
@@ -1362,7 +1362,7 @@ class sparsegroup {
 };
 
 // We need a global swap as well
-template <class T, u_int16_t GROUP_SIZE, class Alloc>
+template <class T, uint16_t GROUP_SIZE, class Alloc>
 inline void swap(sparsegroup<T, GROUP_SIZE, Alloc>& x,
                  sparsegroup<T, GROUP_SIZE, Alloc>& y) {
   x.swap(y);
@@ -1370,7 +1370,7 @@ inline void swap(sparsegroup<T, GROUP_SIZE, Alloc>& x,
 
 // ---------------------------------------------------------------------------
 
-template <class T, u_int16_t GROUP_SIZE = DEFAULT_SPARSEGROUP_SIZE,
+template <class T, uint16_t GROUP_SIZE = DEFAULT_SPARSEGROUP_SIZE,
           class Alloc = libc_allocator_with_realloc<T>>
 class sparsetable {
  private:
@@ -1477,8 +1477,8 @@ class sparsetable {
     return num == 0 ? 0 : ((num - 1) / GROUP_SIZE) + 1;
   }
 
-  u_int16_t pos_in_group(size_type i) const {
-    return static_cast<u_int16_t>(i % GROUP_SIZE);
+  uint16_t pos_in_group(size_type i) const {
+    return static_cast<uint16_t>(i % GROUP_SIZE);
   }
   size_type group_num(size_type i) const { return i / GROUP_SIZE; }
   GroupsReference which_group(size_type i) { return groups[group_num(i)]; }
@@ -1602,7 +1602,7 @@ class sparsetable {
   }
 
   // And the reverse transformation.
-  size_type get_pos(const const_nonempty_iterator it) const {
+  size_type get_pos(const const_nonempty_iterator& it) const {
     difference_type current_row = it.row_current - it.row_begin;
     difference_type current_col =
         (it.col_current - groups[current_row].nonempty_begin());
@@ -1815,7 +1815,7 @@ class sparsetable {
 };
 
 // We need a global swap as well
-template <class T, u_int16_t GROUP_SIZE, class Alloc>
+template <class T, uint16_t GROUP_SIZE, class Alloc>
 inline void swap(sparsetable<T, GROUP_SIZE, Alloc>& x,
                  sparsetable<T, GROUP_SIZE, Alloc>& y) {
   x.swap(y);
