@@ -9,22 +9,12 @@ using google::dense_hash_set;
 
 namespace sparsehash_internal = google::sparsehash_internal;
 
-struct HashtableMoveTest : public ::testing::Test
+TEST(HashtableMoveTest, Insert_RValue)
 {
-    HashtableMoveTest() { h.set_empty_key(0); }
+    dense_hash_map<int, std::unique_ptr<int>> h;
+    h.set_empty_key(0);
 
-    template <typename K, typename V>
-    using hashtable = dense_hash_map<K, V>;
-    //using hashtable = std::unordered_map<K, V>;
-
-    using ht = hashtable<int, std::unique_ptr<int>>;
-    ht h;
-};
-
-TEST_F(HashtableMoveTest, Insert_RValue)
-{
-    typename ht::value_type p1 = std::make_pair(5, std::unique_ptr<int>(new int(1234)));
-
+    auto p1 = std::make_pair(5, std::unique_ptr<int>(new int(1234)));
     auto p = h.insert(std::move(p1));
     ASSERT_EQ(true, p.second);
     ASSERT_EQ(5, p.first->first);
@@ -36,4 +26,28 @@ TEST_F(HashtableMoveTest, Insert_RValue)
     ASSERT_EQ(5678, *p.first->second);
 
     ASSERT_EQ(2, (int)h.size());
+}
+
+struct A
+{
+    A() =default;
+
+    A(const A&) =delete;
+    A& operator=(const A&) =delete;
+
+    A(A&& a) { move_ctor = a.move_ctor + 1; }
+    A& operator=(A&& a) { move_assign = a.move_assign + 1; return *this; }
+
+    int move_ctor = 0;
+    int move_assign = 0;
+};
+
+TEST(HashtableMoveTest, MoveCount)
+{
+    dense_hash_map<int, A> h(10);
+    h.set_empty_key(0);
+
+    h.insert(std::make_pair(5, A()));
+    ASSERT_EQ(0, h[5].move_assign);
+    ASSERT_EQ(3, h[5].move_ctor);
 }
