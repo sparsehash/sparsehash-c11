@@ -288,12 +288,9 @@ class dense_hash_map {
   // THESE ARE NON-STANDARD!  I make you specify an "impossible" key
   // value to identify deleted and empty buckets.  You can change the
   // deleted key as time goes on, or get rid of it entirely to be insert-only.
-  void set_empty_key(const key_type& key) {           // YOU MUST CALL THIS!
-    rep.set_empty_key(value_type(key, data_type()));  // rep wants a value
-  }
-  key_type empty_key() const {
-    return rep.empty_key().first;  // rep returns a value
-  }
+   // YOU MUST CALL THIS!
+  void set_empty_key(const key_type& key) { rep.set_empty_key(key); }
+  key_type empty_key() const {  return rep.empty_key(); }
 
   void set_deleted_key(const key_type& key) { rep.set_deleted_key(key); }
   void clear_deleted_key() { rep.clear_deleted_key(); }
