@@ -394,7 +394,7 @@ class dense_hashtable {
     // the empty indicator (if specified) and the deleted indicator
     // must be different
     assert(
-        (!settings.use_empty() || !equals(key, get_key(key_info.empty_key))) &&
+        (!settings.use_empty() || !equals(key, key_info.empty_key)) &&
         "Passed the empty-key to set_deleted_key");
     // It's only safe to change what "deleted" means if we purge deleted guys
     squash_deleted();
@@ -493,7 +493,7 @@ class dense_hashtable {
   void fill_range_with_empty(pointer table_start, size_type num_buckets) {
     for (size_type i = 0; i < num_buckets; ++i)
     {
-      new(&table_start[i]) Value();
+      new(&table_start[i]) value_type();
       set_key(&table_start[i], key_info.empty_key);
     }
   }
@@ -516,7 +516,7 @@ class dense_hashtable {
     assert(table);
     fill_range_with_empty(table, num_buckets);
   }
-  value_type empty_key() const {
+  key_type empty_key() const {
     assert(settings.use_empty());
     return key_info.empty_key;
   }

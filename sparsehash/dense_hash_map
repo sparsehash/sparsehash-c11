@@ -119,7 +119,9 @@ class dense_hash_map {
   };
   struct SetKey {
     void operator()(std::pair<const Key, T>* value, const Key& new_key) const {
-      *const_cast<Key*>(&value->first) = new_key;
+      using NCKey = typename std::remove_cv<Key>::type;
+      *const_cast<NCKey*>(&value->first) = new_key;
+
       // It would be nice to clear the rest of value here as well, in
       // case it's taking up a lot of memory.  We do this by clearing
       // the value.  This assumes T has a zero-arg constructor!
