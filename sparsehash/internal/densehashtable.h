@@ -356,9 +356,10 @@ class dense_hashtable {
   // const components (they're probably pair<const X, Y>).  We use
   // explicit destructor invocation and placement new to get around
   // this.  Arg.
-  void set_value(pointer dst, const_reference src) {
+  template <typename Arg>
+  void set_value(pointer dst, Arg&& src) {
     dst->~value_type();  // delete the old value, if any
-    new (dst) value_type(src);
+    new (dst) value_type(std::forward<Value>(src));
   }
 
   void destroy_buckets(size_type first, size_type last) {
@@ -561,7 +562,7 @@ class dense_hashtable {
              num_remain < sz * shrink_factor) {
         sz /= 2;  // stay a power of 2
       }
-      dense_hashtable tmp(*this, sz);  // Do the actual resizing
+      dense_hashtable tmp(std::move(*this), sz);  // Do the actual resizing
       swap(tmp);                       // now we are tmp
       retval = true;
     }
@@ -613,7 +614,7 @@ class dense_hashtable {
         resize_to *= 2;
       }
     }
-    dense_hashtable tmp(*this, resize_to);
+    dense_hashtable tmp(std::move(*this), resize_to);
     swap(tmp);  // now we are tmp
     return true;
   }
@@ -630,18 +631,19 @@ class dense_hashtable {
   }
 
   // Used to actually do the rehashing when we grow/shrink a hashtable
-  void copy_from(const dense_hashtable& ht, size_type min_buckets_wanted) {
+  template <typename Hashtable>
+  void copy_or_move_from(Hashtable&& ht, size_type min_buckets_wanted) {
     clear_to_size(settings.min_buckets(ht.size(), min_buckets_wanted));
 
     // We use a normal iterator to get non-deleted bcks from ht
     // We could use insert() here, but since we know there are
     // no duplicates and no deleted items, we can be more efficient
     assert((bucket_count() & (bucket_count() - 1)) == 0);  // a power of two
-    for (const_iterator it = ht.begin(); it != ht.end(); ++it) {
+    for (auto&& value : ht) {
       size_type num_probes = 0;  // how many times we've probed
       size_type bucknum;
       const size_type bucket_count_minus_one = bucket_count() - 1;
-      for (bucknum = hash(get_key(*it)) & bucket_count_minus_one;
+      for (bucknum = hash(get_key(value)) & bucket_count_minus_one;
            !test_empty(bucknum);  // not empty
            bucknum =
                (bucknum + JUMP_(key, num_probes)) & bucket_count_minus_one) {
@@ -649,7 +651,7 @@ class dense_hashtable {
         assert(num_probes < bucket_count() &&
                "Hashtable is full: an error in key_equal<> or hash<>");
       }
-      set_value(&table[bucknum], *it);  // copies the value to here
+      set_value(&table[bucknum], std::forward<decltype(value)>(value));  // copies the value to here
       num_elements++;
     }
     settings.inc_num_ht_copies();
@@ -721,7 +723,26 @@ class dense_hashtable {
       return;
     }
     settings.reset_thresholds(bucket_count());
-    copy_from(ht, min_buckets_wanted);  // copy_from() ignores deleted entries
+    copy_or_move_from(ht, min_buckets_wanted);  // copy_from() ignores deleted entries
+  }
+  dense_hashtable(dense_hashtable&& ht,
+                  size_type min_buckets_wanted = HT_DEFAULT_STARTING_BUCKETS)
+      : settings(ht.settings),
+        key_info(ht.key_info),
+        num_deleted(0),
+        num_elements(0),
+        num_buckets(0),
+        val_info(std::move(ht.val_info)),
+        table(NULL) {
+    if (!ht.settings.use_empty()) {
+      // If use_empty isn't set, copy_from will crash, so we do our own copying.
+      assert(ht.empty());
+      num_buckets = settings.min_buckets(ht.size(), min_buckets_wanted);
+      settings.reset_thresholds(bucket_count());
+      return;
+    }
+    settings.reset_thresholds(bucket_count());
+    copy_or_move_from(std::move(ht), min_buckets_wanted);  // copy_from() ignores deleted entries
   }
 
   dense_hashtable& operator=(const dense_hashtable& ht) {
@@ -905,7 +926,8 @@ class dense_hashtable {
   // INSERTION ROUTINES
  private:
   // Private method used by insert_noresize and find_or_insert.
-  iterator insert_at(const_reference obj, size_type pos) {
+  template <typename Arg>
+  iterator insert_at(Arg&& obj, size_type pos) {
     if (size() >= max_size()) {
       throw std::length_error("insert overflow");
     }
@@ -918,12 +940,13 @@ class dense_hashtable {
     } else {
       ++num_elements;  // replacing an empty bucket
     }
-    set_value(&table[pos], obj);
+    set_value(&table[pos], std::forward<Arg>(obj));
     return iterator(this, table + pos, table + num_buckets, false);
   }
 
   // If you know *this is big enough to hold obj, use this routine
-  std::pair<iterator, bool> insert_noresize(const_reference obj) {
+  template <typename Arg>
+  std::pair<iterator, bool> insert_noresize(Arg&& obj) {
     // First, double-check we're not inserting delkey or emptyval
     assert((!settings.use_empty() ||
             !equals(get_key(obj), get_key(val_info.emptyval))) &&
@@ -937,7 +960,7 @@ class dense_hashtable {
           iterator(this, table + pos.first, table + num_buckets, false),
           false);  // false: we didn't insert
     } else {       // pos.second says where to put it
-      return std::pair<iterator, bool>(insert_at(obj, pos.second), true);
+      return std::pair<iterator, bool>(insert_at(std::forward<Arg>(obj), pos.second), true);
     }
   }
 
@@ -963,7 +986,8 @@ class dense_hashtable {
 
  public:
   // This is the normal insert routine, used by the outside world
-  std::pair<iterator, bool> insert(const_reference obj) {
+  template <typename Arg>
+  std::pair<iterator, bool> insert(Arg&& obj) {
     resize_delta(1);  // adding an object, grow if need be
     return insert_noresize(obj);
   }
@@ -1219,6 +1243,8 @@ class dense_hashtable {
         : alloc_impl<value_alloc_type>(a), emptyval() {}
     ValInfo(const ValInfo& v)
         : alloc_impl<value_alloc_type>(v), emptyval(v.emptyval) {}
+    ValInfo(ValInfo&& v)
+        : alloc_impl<value_alloc_type>(v), emptyval(std::move(v.emptyval)) {}
 
     value_type emptyval;  // which key marks unused entries
   };
