@@ -359,7 +359,7 @@ class dense_hashtable {
   template <typename Arg>
   void set_value(pointer dst, Arg&& src) {
     dst->~value_type();  // delete the old value, if any
-    new (dst) value_type(std::forward<Value>(src));
+    new (dst) value_type(std::forward<Arg>(src));
   }
 
   void destroy_buckets(size_type first, size_type last) {
@@ -651,7 +651,11 @@ class dense_hashtable {
         assert(num_probes < bucket_count() &&
                "Hashtable is full: an error in key_equal<> or hash<>");
       }
-      set_value(&table[bucknum], std::forward<decltype(value)>(value));  // copies the value to here
+
+      using will_move = std::is_rvalue_reference<Hashtable&&>;
+      using value_t = typename std::conditional<will_move::value, value_type&&, const_reference>::type;
+
+      set_value(&table[bucknum], std::forward<value_t>(value));
       num_elements++;
     }
     settings.inc_num_ht_copies();
@@ -723,7 +727,7 @@ class dense_hashtable {
       return;
     }
     settings.reset_thresholds(bucket_count());
-    copy_or_move_from(ht, min_buckets_wanted);  // copy_from() ignores deleted entries
+    copy_or_move_from(ht, min_buckets_wanted);  // copy_or_move_from() ignores deleted entries
   }
   dense_hashtable(dense_hashtable&& ht,
                   size_type min_buckets_wanted = HT_DEFAULT_STARTING_BUCKETS)
@@ -735,14 +739,14 @@ class dense_hashtable {
         val_info(std::move(ht.val_info)),
         table(NULL) {
     if (!ht.settings.use_empty()) {
-      // If use_empty isn't set, copy_from will crash, so we do our own copying.
+      // If use_empty isn't set, copy_or_move_from will crash, so we do our own copying.
       assert(ht.empty());
       num_buckets = settings.min_buckets(ht.size(), min_buckets_wanted);
       settings.reset_thresholds(bucket_count());
       return;
     }
     settings.reset_thresholds(bucket_count());
-    copy_or_move_from(std::move(ht), min_buckets_wanted);  // copy_from() ignores deleted entries
+    copy_or_move_from(std::move(ht), min_buckets_wanted);  // copy_or_move_from() ignores deleted entries
   }
 
   dense_hashtable& operator=(const dense_hashtable& ht) {
@@ -755,9 +759,8 @@ class dense_hashtable {
     }
     settings = ht.settings;
     key_info = ht.key_info;
-    set_value(&val_info.emptyval, ht.val_info.emptyval);
-    // copy_from() calls clear and sets num_deleted to 0 too
-    copy_from(ht, HT_MIN_BUCKETS);
+    // copy_or_move_from() calls clear and sets num_deleted to 0 too
+    copy_or_move_from(ht, HT_MIN_BUCKETS);
     // we purposefully don't copy the allocator, which may not be copyable
     return *this;
   }
@@ -989,7 +992,7 @@ class dense_hashtable {
   template <typename Arg>
   std::pair<iterator, bool> insert(Arg&& obj) {
     resize_delta(1);  // adding an object, grow if need be
-    return insert_noresize(obj);
+    return insert_noresize(std::forward<Arg>(obj));
   }
 
   // When inserting a lot at a time, we specialize on the type of iterator

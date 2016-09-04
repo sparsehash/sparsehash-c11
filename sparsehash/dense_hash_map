@@ -272,9 +272,9 @@ class dense_hash_map {
   std::pair<iterator, bool> insert(const value_type& obj) {
     return rep.insert(obj);
   }
-  template <typename Pair, typename = typename std::enable_if<std::is_constructible<value_type, Pair&&>::value>::type>
-  std::pair<iterator, bool> insert(Pair&& obj) {
-    return rep.insert(std::forward<Pair>(obj));
+
+  std::pair<iterator, bool> insert(value_type&& obj) {
+    return rep.insert(std::move(obj));
   }
   template <class InputIterator>
   void insert(InputIterator f, InputIterator l) {
