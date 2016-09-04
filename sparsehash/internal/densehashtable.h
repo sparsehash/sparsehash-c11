@@ -514,7 +514,7 @@ class dense_hashtable {
     // num_buckets was set in constructor even though table was NULL
     table = val_info.allocate(num_buckets);
     assert(table);
-    fill_range_with_empty(table, table + num_buckets);
+    fill_range_with_empty(table, num_buckets);
   }
   value_type empty_key() const {
     assert(settings.use_empty());
