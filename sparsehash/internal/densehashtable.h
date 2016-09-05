@@ -946,12 +946,10 @@ class dense_hashtable {
   template <typename K, typename... Args>
   std::pair<iterator, bool> insert_noresize(K&& key, Args&&... args) {
     // First, double-check we're not inserting delkey or emptyval
-    assert((!settings.use_empty() ||
-            !equals(key, key_info.empty_key)) &&
-           "Inserting the empty key");
-    assert(
-        (!settings.use_deleted() || !equals(key, key_info.delkey)) &&
-        "Inserting the deleted key");
+    assert(settings.use_empty() && "Inserting without empty key");
+    assert(!equals(std::forward<K>(key), key_info.empty_key) && "Inserting the empty key");
+    assert((!settings.use_deleted() || !equals(key, key_info.delkey)) && "Inserting the deleted key");
+
     const std::pair<size_type, size_type> pos = find_position(key);
     if (pos.first != ILLEGAL_BUCKET) {  // object was already there
       return std::pair<iterator, bool>(
