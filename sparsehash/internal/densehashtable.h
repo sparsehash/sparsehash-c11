@@ -356,10 +356,10 @@ class dense_hashtable {
   // const components (they're probably pair<const X, Y>).  We use
   // explicit destructor invocation and placement new to get around
   // this.  Arg.
-  template <typename Arg>
-  void set_value(pointer dst, Arg&& src) {
+  template <typename... Args>
+  void set_value(pointer dst, Args&&... args) {
     dst->~value_type();  // delete the old value, if any
-    new (dst) value_type(std::forward<Arg>(src));
+    new (dst) value_type(std::forward<Args>(args)...);
   }
 
   void destroy_buckets(size_type first, size_type last) {
@@ -924,8 +924,8 @@ class dense_hashtable {
   // INSERTION ROUTINES
  private:
   // Private method used by insert_noresize and find_or_insert.
-  template <typename Arg>
-  iterator insert_at(Arg&& obj, size_type pos) {
+  template <typename... Args>
+  iterator insert_at(size_type pos, Args&&... args) {
     if (size() >= max_size()) {
       throw std::length_error("insert overflow");
     }
@@ -938,27 +938,27 @@ class dense_hashtable {
     } else {
       ++num_elements;  // replacing an empty bucket
     }
-    set_value(&table[pos], std::forward<Arg>(obj));
+    set_value(&table[pos], std::forward<Args>(args)...);
     return iterator(this, table + pos, table + num_buckets, false);
   }
 
   // If you know *this is big enough to hold obj, use this routine
-  template <typename Arg>
-  std::pair<iterator, bool> insert_noresize(Arg&& obj) {
+  template <typename K, typename... Args>
+  std::pair<iterator, bool> insert_noresize(K&& key, Args&&... args) {
     // First, double-check we're not inserting delkey or emptyval
     assert((!settings.use_empty() ||
-            !equals(get_key(obj), key_info.empty_key)) &&
+            !equals(key, key_info.empty_key)) &&
            "Inserting the empty key");
     assert(
-        (!settings.use_deleted() || !equals(get_key(obj), key_info.delkey)) &&
+        (!settings.use_deleted() || !equals(key, key_info.delkey)) &&
         "Inserting the deleted key");
-    const std::pair<size_type, size_type> pos = find_position(get_key(obj));
+    const std::pair<size_type, size_type> pos = find_position(key);
     if (pos.first != ILLEGAL_BUCKET) {  // object was already there
       return std::pair<iterator, bool>(
           iterator(this, table + pos.first, table + num_buckets, false),
           false);  // false: we didn't insert
     } else {       // pos.second says where to put it
-      return std::pair<iterator, bool>(insert_at(std::forward<Arg>(obj), pos.second), true);
+      return std::pair<iterator, bool>(insert_at(pos.second, std::forward<Args>(args)...), true);
     }
   }
 
@@ -972,7 +972,7 @@ class dense_hashtable {
     }
     resize_delta(static_cast<size_type>(dist));
     for (; dist > 0; --dist, ++f) {
-      insert_noresize(*f);
+      insert_noresize(get_key(*f), *f);
     }
   }
 
@@ -987,7 +987,14 @@ class dense_hashtable {
   template <typename Arg>
   std::pair<iterator, bool> insert(Arg&& obj) {
     resize_delta(1);  // adding an object, grow if need be
-    return insert_noresize(std::forward<Arg>(obj));
+    return insert_noresize(get_key(obj), std::forward<Arg>(obj));
+  }
+
+  template <typename K, typename... Args>
+  std::pair<iterator, bool> emplace(K&& key, Args&&... args) {
+    resize_delta(1);
+    // here we push key twice as we need it once for the indexing, and the rest of the params are for the emplace itself
+    return insert_noresize(std::forward<K>(key), std::forward<K>(key), std::forward<Args>(args)...);
   }
 
   // When inserting a lot at a time, we specialize on the type of iterator
@@ -1014,9 +1021,9 @@ class dense_hashtable {
       return table[pos.first];
     } else if (resize_delta(1)) {  // needed to rehash to make room
       // Since we resized, we can't use pos, so recalculate where to insert.
-      return *insert_noresize(default_value(key)).first;
+      return *insert_noresize(key, default_value(key)).first;
     } else {  // no need to rehash, insert right here
-      return *insert_at(default_value(key), pos.second);
+      return *insert_at(pos.second, default_value(key));
     }
   }
 
