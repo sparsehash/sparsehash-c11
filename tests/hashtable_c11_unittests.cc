@@ -201,7 +201,6 @@ TEST(HashtableMoveTest, InsertValueMovedCount)
     ASSERT_EQ(0, p.first->second.copy_assign);
 }
 
-
 TEST(HashtableMoveTest, OperatorInsertRValueCount)
 {
     dense_hash_map<B, int, HashB> h;
@@ -217,4 +216,89 @@ TEST(HashtableMoveTest, OperatorInsertRValueCount)
     ASSERT_EQ(0, B::copy_assign);
     ASSERT_EQ(1, B::move_ctor);
     ASSERT_EQ(0, B::move_assign);
+}
+
+TEST(HashtableMoveTest, EraseConstIterator)
+{
+    dense_hash_map<int, int> h;
+    h.set_empty_key(0);
+    h.set_deleted_key(-1);
+
+    h[1] = 1;
+    const auto it = h.begin();
+    ASSERT_TRUE(h.end() == h.erase(it));
+    ASSERT_EQ(0, (int)h.size());
+}
+
+TEST(HashtableMoveTest, EraseRange)
+{
+    dense_hash_map<int, int> h;
+    h.set_empty_key(0);
+    h.set_deleted_key(-1);
+
+    for (int i = 0; i < 10; ++i)
+        h[i + 1] = i;
+
+    auto it = h.begin();
+    std::advance(it, 2);
+
+    auto it2 = h.begin();
+    std::advance(it2, 8);
+
+    auto nextit = h.erase(it, it2);
+    ASSERT_FALSE(h.end() == nextit);
+    nextit = h.erase(nextit);
+    ASSERT_FALSE(h.end() == nextit);
+    ASSERT_TRUE(h.end() == h.erase(nextit));
+
+    ASSERT_FALSE(h.end() == h.erase(h.begin()));
+    ASSERT_TRUE(h.end() == h.erase(h.begin()));
+
+    ASSERT_TRUE(h.empty());
+}
+
+TEST(HashtableMoveTest, EraseRangeEntireMap)
+{
+    dense_hash_map<int, int> h;
+    h.set_empty_key(0);
+    h.set_deleted_key(-1);
+
+    for (int i = 0; i < 10; ++i)
+        h[i + 1] = i;
+
+    ASSERT_TRUE(h.end() == h.erase(h.begin(), h.end()));
+    ASSERT_TRUE(h.empty());
+}
+
+TEST(HashtableMoveTest, EraseNextElementReturned)
+{
+    dense_hash_map<int, int> h;
+    h.set_empty_key(0);
+    h.set_deleted_key(-1);
+
+    h[1] = 1;
+    h[2] = 2;
+
+    int first = h.begin()->first;
+    int second = first == 1 ? 2 : 1;
+
+    ASSERT_EQ(second, h.erase(h.begin())->first); // second element is returned when erasing the first one
+    ASSERT_TRUE(h.end() == h.erase(h.begin())); // end() is returned when erasing the second and last element
+}
+
+
+TEST(HashtableMoveTest, EraseNumberOfElementsDeleted)
+{
+    dense_hash_map<int, int> h;
+    h.set_empty_key(0);
+    h.set_deleted_key(-1);
+
+    h[1] = 1;
+    h[2] = 2;
+
+    ASSERT_EQ(0, (int)h.erase(3));
+    ASSERT_EQ(1, (int)h.erase(1));
+    ASSERT_EQ(1, (int)h.erase(2));
+    ASSERT_EQ(0, (int)h.erase(4));
+    ASSERT_TRUE(h.empty());
 }

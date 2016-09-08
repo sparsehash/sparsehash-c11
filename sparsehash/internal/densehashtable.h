@@ -1046,44 +1046,24 @@ class dense_hashtable {
   }
 
   // We return the iterator past the deleted item.
-  void erase(iterator pos) {
-    if (pos == end()) return;  // sanity check
+  iterator erase(const_iterator pos) {
+    if (pos == end()) return end();  // sanity check
     if (set_deleted(pos)) {    // true if object has been newly deleted
       ++num_deleted;
       settings.set_consider_shrink(
           true);  // will think about shrink after next insert
     }
+    return iterator(this, const_cast<pointer>(pos.pos), const_cast<pointer>(pos.end), true);
   }
 
-  void erase(iterator f, iterator l) {
+  iterator erase(const_iterator f, const_iterator l) {
     for (; f != l; ++f) {
       if (set_deleted(f))  // should always be true
         ++num_deleted;
     }
     settings.set_consider_shrink(
         true);  // will think about shrink after next insert
-  }
-
-  // We allow you to erase a const_iterator just like we allow you to
-  // erase an iterator.  This is in parallel to 'delete': you can delete
-  // a const pointer just like a non-const pointer.  The logic is that
-  // you can't use the object after it's erased anyway, so it doesn't matter
-  // if it's const or not.
-  void erase(const_iterator pos) {
-    if (pos == end()) return;  // sanity check
-    if (set_deleted(pos)) {    // true if object has been newly deleted
-      ++num_deleted;
-      settings.set_consider_shrink(
-          true);  // will think about shrink after next insert
-    }
-  }
-  void erase(const_iterator f, const_iterator l) {
-    for (; f != l; ++f) {
-      if (set_deleted(f))  // should always be true
-        ++num_deleted;
-    }
-    settings.set_consider_shrink(
-        true);  // will think about shrink after next insert
+    return iterator(this, const_cast<pointer>(f.pos), const_cast<pointer>(f.end), false);
   }
 
   // COMPARISON

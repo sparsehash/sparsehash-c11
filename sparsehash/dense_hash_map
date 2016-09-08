@@ -304,8 +304,8 @@ class dense_hash_map {
 
   // These are standard
   size_type erase(const key_type& key) { return rep.erase(key); }
-  void erase(iterator it) { rep.erase(it); }
-  void erase(iterator f, iterator l) { rep.erase(f, l); }
+  iterator erase(const_iterator it) { return rep.erase(it); }
+  iterator erase(const_iterator f, const_iterator l) { return rep.erase(f, l); }
 
   // Comparison
   bool operator==(const dense_hash_map& hs) const { return rep == hs.rep; }
