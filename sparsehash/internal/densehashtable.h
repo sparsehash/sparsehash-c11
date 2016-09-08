@@ -1005,8 +1005,8 @@ class dense_hashtable {
 
   // DefaultValue is a functor that takes a key and returns a value_type
   // representing the default value to be inserted if none is found.
-  template <class DefaultValue>
-  value_type& find_or_insert(const key_type& key) {
+  template <class T, class K>
+  value_type& find_or_insert(K&& key) {
     // First, double-check we're not inserting emptykey or delkey
     assert(
         (!settings.use_empty() || !equals(key, key_info.empty_key)) &&
@@ -1014,14 +1014,13 @@ class dense_hashtable {
     assert((!settings.use_deleted() || !equals(key, key_info.delkey)) &&
            "Inserting the deleted key");
     const std::pair<size_type, size_type> pos = find_position(key);
-    DefaultValue default_value;
     if (pos.first != ILLEGAL_BUCKET) {  // object was already there
       return table[pos.first];
     } else if (resize_delta(1)) {  // needed to rehash to make room
       // Since we resized, we can't use pos, so recalculate where to insert.
-      return *insert_noresize(key, default_value(key)).first;
+      return *insert_noresize(std::forward<K>(key), std::forward<K>(key), T()).first;
     } else {  // no need to rehash, insert right here
-      return *insert_at(pos.second, default_value(key));
+      return *insert_at(pos.second, std::forward<K>(key), T());
     }
   }
 

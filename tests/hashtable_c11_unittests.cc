@@ -201,3 +201,20 @@ TEST(HashtableMoveTest, InsertValueMovedCount)
     ASSERT_EQ(0, p.first->second.copy_assign);
 }
 
+
+TEST(HashtableMoveTest, OperatorInsertRValueCount)
+{
+    dense_hash_map<B, int, HashB> h;
+    h.set_empty_key(B(0));
+
+    B::reset();
+    h[B(1)] = 1;
+
+    std::cout << B() << std::endl;
+    // without operator[](const K&): copy_ctor=2 copy_assign=0 move_ctor=1 move_assign=0
+    // now:    copy_ctor=0 copy_assign=0 move_ctor=1 move_assign=0
+    ASSERT_EQ(0, B::copy_ctor);
+    ASSERT_EQ(0, B::copy_assign);
+    ASSERT_EQ(1, B::move_ctor);
+    ASSERT_EQ(0, B::move_assign);
+}
