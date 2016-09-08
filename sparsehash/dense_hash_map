@@ -159,6 +159,8 @@ class dense_hash_map {
   iterator end() { return rep.end(); }
   const_iterator begin() const { return rep.begin(); }
   const_iterator end() const { return rep.end(); }
+  const_iterator cbegin() const { return rep.begin(); }
+  const_iterator cend() const { return rep.end(); }
 
   // These come from tr1's unordered_map. For us, a bucket has 0 or 1 elements.
   local_iterator begin(size_type i) { return rep.begin(i); }

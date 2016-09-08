@@ -286,7 +286,6 @@ TEST(HashtableMoveTest, EraseNextElementReturned)
     ASSERT_TRUE(h.end() == h.erase(h.begin())); // end() is returned when erasing the second and last element
 }
 
-
 TEST(HashtableMoveTest, EraseNumberOfElementsDeleted)
 {
     dense_hash_map<int, int> h;
@@ -301,4 +300,25 @@ TEST(HashtableMoveTest, EraseNumberOfElementsDeleted)
     ASSERT_EQ(1, (int)h.erase(2));
     ASSERT_EQ(0, (int)h.erase(4));
     ASSERT_TRUE(h.empty());
+}
+
+TEST(HashtableMoveTest, CBeginCEnd)
+{
+    dense_hash_map<int, int> h;
+    h.set_empty_key(0);
+    h.set_deleted_key(-1);
+
+    h[1] = 1;
+
+    auto it = h.cbegin();
+    ASSERT_EQ(1, it->first);
+
+    std::advance(it, 1);
+    ASSERT_TRUE(it == h.cend());
+
+    using cit = dense_hash_map<int, int>::const_iterator;
+    cit begin = h.begin();
+    cit end = h.end();
+    ASSERT_TRUE(begin == h.cbegin());
+    ASSERT_TRUE(end == h.cend());
 }
