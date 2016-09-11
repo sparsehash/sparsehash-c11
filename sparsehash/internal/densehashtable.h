@@ -995,6 +995,18 @@ class dense_hashtable {
     return insert_noresize(std::forward<K>(key), std::forward<K>(key), std::forward<Args>(args)...);
   }
 
+  template <typename K, typename... Args>
+  std::pair<iterator, bool> emplace_hint(const_iterator hint, K&& key, Args&&... args) {
+    resize_delta(1);
+
+    if (equals(key, hint->first)) {
+        return {iterator(this, const_cast<pointer>(hint.pos), const_cast<pointer>(hint.end), false), false};
+    }
+
+    // here we push key twice as we need it once for the indexing, and the rest of the params are for the emplace itself
+    return insert_noresize(std::forward<K>(key), std::forward<K>(key), std::forward<Args>(args)...);
+  }
+
   // When inserting a lot at a time, we specialize on the type of iterator
   template <class InputIterator>
   void insert(InputIterator f, InputIterator l) {

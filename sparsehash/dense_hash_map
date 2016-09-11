@@ -283,6 +283,11 @@ class dense_hash_map {
     return rep.emplace(std::forward<Args>(args)...);
   }
 
+  template <typename... Args>
+  std::pair<iterator, bool> emplace_hint(const_iterator hint, Args&&... args) {
+    return rep.emplace_hint(hint, std::forward<Args>(args)...);
+  }
+
 
   template <class InputIterator>
   void insert(InputIterator f, InputIterator l) {

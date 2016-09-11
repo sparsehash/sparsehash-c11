@@ -5,6 +5,8 @@
 #include "gtest/gtest.h"
 #include <unordered_map>
 #include <unordered_set>
+#include <chrono>
+
 using google::dense_hash_map;
 using google::dense_hash_set;
 
@@ -45,6 +47,78 @@ TEST(HashtableMoveTest, Emplace)
     ASSERT_EQ(5678, *p.first->second);
 
     ASSERT_EQ(2, (int)h.size());
+
+    ASSERT_TRUE(h.emplace(11, new int(1)).second);
+    ASSERT_FALSE(h.emplace(11, new int(1)).second);
+    ASSERT_TRUE(h.emplace(12, new int(1)).second);
+    ASSERT_FALSE(h.emplace(12, new int(1)).second);
+}
+
+TEST(HashtableMoveTest, EmplaceHint)
+{
+    dense_hash_map<int, int> h;
+    h.set_empty_key(0);
+
+    h[1] = 1;
+    h[3] = 3;
+    h[5] = 5;
+
+    ASSERT_FALSE(h.emplace_hint(h.find(1), 1, 0).second);
+    ASSERT_FALSE(h.emplace_hint(h.find(3), 1, 0).second);
+    ASSERT_FALSE(h.emplace_hint(h.end(), 1, 0).second);
+    ASSERT_EQ(3, (int)h.size());
+
+    ASSERT_TRUE(h.emplace_hint(h.find(1), 2, 0).second);
+    ASSERT_TRUE(h.emplace_hint(h.find(3), 4, 0).second);
+    ASSERT_TRUE(h.emplace_hint(h.end(), 6, 0).second);
+    ASSERT_EQ(6, (int)h.size());
+}
+
+TEST(HashtableMoveTest, EmplaceHint_SpeedComparison)
+{
+    static const int Elements = 1e6;
+    static const int Duplicates = 5;
+
+    std::vector<int> v(Elements * Duplicates);
+
+    for (int i = 0; i < Elements * Duplicates; i += Duplicates)
+    {
+        auto r = std::rand();
+
+        for (int j = 0; j < Duplicates; ++j)
+            v[i + j] = r;
+    }
+
+    std::sort(std::begin(v), std::end(v));
+
+    auto start = std::chrono::system_clock::now();
+
+    {
+        dense_hash_map<int, int> h;
+        h.set_empty_key(-1);
+
+        for (int i = 0; i < Elements; ++i)
+            h.emplace(v[i], 0);
+    }
+
+    auto end = std::chrono::system_clock::now();
+    auto emplace_time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+
+    start = std::chrono::system_clock::now();
+
+    {
+        dense_hash_map<int, int> h;
+        h.set_empty_key(-1);
+
+        auto hint = h.begin();
+        for (int i = 0; i < Elements; ++i)
+            hint = h.emplace_hint(hint, v[i], 0).first;
+    }
+
+    end = std::chrono::system_clock::now();
+    auto emplace_hint_time = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+
+    ASSERT_LE(emplace_hint_time, emplace_time);
 }
 
 struct A
