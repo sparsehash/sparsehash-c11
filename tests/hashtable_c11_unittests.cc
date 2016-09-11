@@ -126,55 +126,11 @@ struct A
     A() =default;
     A(int i) noexcept : _i(i) {}
 
-    A(const A&) =delete;
-    A& operator=(const A&) =delete;
+    A(const A& a) { _i = a._i; ++copy_ctor;; }
+    A& operator=(const A& a) { _i = a._i; ++copy_assign; return *this; }
 
-    A(A&& a) { _i = a._i; move_ctor = a.move_ctor + 1; }
-    A& operator=(A&& a) { _i = a._i; move_assign = a.move_assign + 1; return *this; }
-
-    int _i = 0;
-    int move_ctor = 0;
-    int move_assign = 0;
-};
-
-bool operator==(const A& a1, const A& a2) { return a1._i == a2._i; }
-
-struct HashA
-{
-    std::size_t operator()(const A& a) const { return std::hash<int>()(a._i); }
-};
-
-TEST(HashtableMoveTest, MoveCount)
-{
-    dense_hash_map<int, A> h(10);
-    h.set_empty_key(0);
-
-    h.insert(std::make_pair(5, A()));
-    ASSERT_EQ(0, h[5].move_assign);
-    ASSERT_EQ(3, h[5].move_ctor);
-}
-
-TEST(HashtableMoveTest, EmplaceMoveCount)
-{
-    dense_hash_map<int, A> h;
-    h.set_empty_key(0);
-
-    h.emplace(1, 2);
-    ASSERT_EQ(0, h[1].move_assign);
-    ASSERT_EQ(0, h[1].move_ctor);
-}
-
-
-struct B
-{
-    B() =default;
-    B(int i) noexcept : _i(i) {}
-
-    B(const B& b) { _i = b._i; ++copy_ctor;; }
-    B& operator=(const B& b) { _i = b._i; ++copy_assign; return *this; }
-
-    B(B&& b) { _i = b._i; ++move_ctor; }
-    B& operator=(B&& b) { _i = b._i; ++move_assign; return *this; }
+    A(A&& a) { _i = a._i; ++move_ctor; }
+    A& operator=(A&& a) { _i = a._i; ++move_assign; return *this; }
 
     static void reset()
     {
@@ -192,71 +148,100 @@ struct B
     static int move_assign;
 };
 
-int B::copy_ctor = 0;
-int B::copy_assign = 0;
-int B::move_ctor = 0;
-int B::move_assign = 0;
+int A::copy_ctor = 0;
+int A::copy_assign = 0;
+int A::move_ctor = 0;
+int A::move_assign = 0;
 
-std::ostream& operator<<(std::ostream& os, const B& b)
+std::ostream& operator<<(std::ostream& os, const A& a)
 {
-    return os << b._i << " copy_ctor=" << b.copy_ctor << " copy_assign=" << b.copy_assign <<
-                         " move_ctor=" << b.move_ctor << " move_assign=" << b.move_assign;
+    return os << a._i << " copy_ctor=" << a.copy_ctor << " copy_assign=" << a.copy_assign <<
+                         " move_ctor=" << a.move_ctor << " move_assign=" << a.move_assign;
 }
 
-bool operator==(const B& b1, const B& b2) { return b1._i == b2._i; }
+bool operator==(const A& a1, const A& a2) { return a1._i == a2._i; }
 
-struct HashB
+struct HashA
 {
-    std::size_t operator()(const B& b) const { return std::hash<int>()(b._i); }
+    std::size_t operator()(const A& a) const { return std::hash<int>()(a._i); }
 };
 
+
+TEST(HashtableMoveTest, MoveCount)
+{
+    dense_hash_map<int, A> h(10);
+    h.set_empty_key(0);
+
+    A::reset();
+    h.insert(std::make_pair(5, A()));
+
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_assign);
+    ASSERT_EQ(3, A::move_ctor);
+}
+
+TEST(HashtableMoveTest, EmplaceMoveCount)
+{
+    dense_hash_map<int, A> h;
+    h.set_empty_key(0);
+
+    A::reset();
+    h.emplace(1, 2);
+
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_assign);
+    ASSERT_EQ(0, A::move_ctor);
+}
 TEST(HashtableMoveTest, EmplaceKeyMoveCount)
 {
-    dense_hash_map<B, int, HashB> h;
-    h.set_empty_key(B(0));
+    dense_hash_map<A, int, HashA> h;
+    h.set_empty_key(A(0));
 
-    B::reset();
-    auto p = h.emplace(1, 2);
-    ASSERT_EQ(0, p.first->first.copy_ctor);
-    ASSERT_EQ(0, p.first->first.copy_assign);
-    ASSERT_EQ(0, p.first->first.move_ctor);
-    ASSERT_EQ(0, p.first->first.move_assign);
+    A::reset();
+    h.emplace(1, 2);
+
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_assign);
+    ASSERT_EQ(0, A::move_ctor);
 }
 
 TEST(HashtableMoveTest, InsertKeyRValueCount)
 {
-    dense_hash_map<B, int, HashB> h;
-    h.set_empty_key(B(0));
+    dense_hash_map<A, int, HashA> h;
+    h.set_empty_key(A(0));
 
-    B::reset();
-    h.insert(std::make_pair(B(2), 2));
+    A::reset();
+    h.insert(std::make_pair(A(2), 2));
 
-    std::cout << B() << std::endl;
-    ASSERT_EQ(0, B::copy_ctor);
-    ASSERT_EQ(0, B::copy_assign);
+    std::cout << A() << std::endl;
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
 }
 
 TEST(HashtableMoveTest, InsertKeyMovedCount)
 {
-    dense_hash_map<B, int, HashB> h;
-    h.set_empty_key(B(0));
+    dense_hash_map<A, int, HashA> h;
+    h.set_empty_key(A(0));
 
-    B::reset();
-    auto m = std::make_pair(B(2), 2);
+    A::reset();
+    auto m = std::make_pair(A(2), 2);
     h.insert(std::move(m));
 
-    std::cout << B() << std::endl;
-    ASSERT_EQ(0, B::copy_ctor);
-    ASSERT_EQ(0, B::copy_assign);
+    std::cout << A() << std::endl;
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
 }
 
 TEST(HashtableMoveTest, InsertValueRValueCount)
 {
-    dense_hash_map<int, B> h;
+    dense_hash_map<int, A> h;
     h.set_empty_key(0);
 
-    B::reset();
-    auto p = h.insert(std::make_pair(2, B(2)));
+    A::reset();
+    auto p = h.insert(std::make_pair(2, A(2)));
 
     std::cout << p.first->second << std::endl;
     ASSERT_EQ(0, p.first->second.copy_ctor);
@@ -264,11 +249,11 @@ TEST(HashtableMoveTest, InsertValueRValueCount)
 }
 TEST(HashtableMoveTest, InsertValueMovedCount)
 {
-    dense_hash_map<int, B> h;
+    dense_hash_map<int, A> h;
     h.set_empty_key(0);
 
-    B::reset();
-    auto m = std::make_pair(2, B(2));
+    A::reset();
+    auto m = std::make_pair(2, A(2));
     auto p = h.insert(std::move(m));
 
     std::cout << p.first->second << std::endl;
@@ -278,19 +263,19 @@ TEST(HashtableMoveTest, InsertValueMovedCount)
 
 TEST(HashtableMoveTest, OperatorInsertRValueCount)
 {
-    dense_hash_map<B, int, HashB> h;
-    h.set_empty_key(B(0));
+    dense_hash_map<A, int, HashA> h;
+    h.set_empty_key(A(0));
 
-    B::reset();
-    h[B(1)] = 1;
+    A::reset();
+    h[A(1)] = 1;
 
-    std::cout << B() << std::endl;
+    std::cout << A() << std::endl;
     // without operator[](const K&): copy_ctor=2 copy_assign=0 move_ctor=1 move_assign=0
     // now:    copy_ctor=0 copy_assign=0 move_ctor=1 move_assign=0
-    ASSERT_EQ(0, B::copy_ctor);
-    ASSERT_EQ(0, B::copy_assign);
-    ASSERT_EQ(1, B::move_ctor);
-    ASSERT_EQ(0, B::move_assign);
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(1, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
 }
 
 TEST(HashtableMoveTest, EraseConstIterator)
