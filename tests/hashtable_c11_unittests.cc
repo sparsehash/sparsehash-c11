@@ -229,10 +229,11 @@ TEST(HashtableMoveTest, InsertKeyRValueCount)
     h.set_empty_key(B(0));
 
     B::reset();
-    auto p = h.insert(std::make_pair(B(2), 2));
-    std::cout << p.first->first << std::endl;
-    ASSERT_EQ(0, p.first->first.copy_ctor);
-    ASSERT_EQ(0, p.first->first.copy_assign);
+    h.insert(std::make_pair(B(2), 2));
+
+    std::cout << B() << std::endl;
+    ASSERT_EQ(0, B::copy_ctor);
+    ASSERT_EQ(0, B::copy_assign);
 }
 
 TEST(HashtableMoveTest, InsertKeyMovedCount)
@@ -242,11 +243,11 @@ TEST(HashtableMoveTest, InsertKeyMovedCount)
 
     B::reset();
     auto m = std::make_pair(B(2), 2);
-    auto p = h.insert(std::move(m));
+    h.insert(std::move(m));
 
-    std::cout << p.first->first << std::endl;
-    ASSERT_EQ(0, p.first->first.copy_ctor);
-    ASSERT_EQ(0, p.first->first.copy_assign);
+    std::cout << B() << std::endl;
+    ASSERT_EQ(0, B::copy_ctor);
+    ASSERT_EQ(0, B::copy_assign);
 }
 
 TEST(HashtableMoveTest, InsertValueRValueCount)
@@ -396,3 +397,4 @@ TEST(HashtableMoveTest, CBeginCEnd)
     ASSERT_TRUE(begin == h.cbegin());
     ASSERT_TRUE(end == h.cend());
 }
+
