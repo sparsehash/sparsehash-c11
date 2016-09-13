@@ -113,7 +113,8 @@ class dense_hash_map {
   // Apparently select1st is not stl-standard, so we define our own
   struct SelectKey {
     typedef const Key& result_type;
-    const Key& operator()(const std::pair<const Key, T>& p) const {
+    template <typename Pair>
+    const Key& operator()(Pair&& p) const {
       return p.first;
     }
   };
@@ -274,6 +275,12 @@ class dense_hash_map {
     return rep.insert(obj);
   }
 
+  template <typename Pair, typename = typename std::enable_if<std::is_constructible<value_type, Pair&&>::value>::type>
+  std::pair<iterator, bool> insert(Pair&& obj) {
+    return rep.insert(std::forward<Pair>(obj));
+  }
+
+  // overload to allow {} syntax: .insert( { {key}, {args} } )
   std::pair<iterator, bool> insert(value_type&& obj) {
     return rep.insert(std::move(obj));
   }

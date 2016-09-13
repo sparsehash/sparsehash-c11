@@ -985,7 +985,7 @@ class dense_hashtable {
   template <typename Arg>
   std::pair<iterator, bool> insert(Arg&& obj) {
     resize_delta(1);  // adding an object, grow if need be
-    return insert_noresize(get_key(obj), std::forward<Arg>(obj));
+    return insert_noresize(get_key(std::forward<Arg>(obj)), std::forward<Arg>(obj));
   }
 
   template <typename K, typename... Args>
@@ -1257,8 +1257,9 @@ class dense_hashtable {
         : ExtractKey(ek), SetKey(sk), EqualKey(eq) {}
 
     // We want to return the exact same type as ExtractKey: Key or const Key&
-    typename ExtractKey::result_type get_key(const_reference v) const {
-      return ExtractKey::operator()(v);
+    template <typename V>
+    typename ExtractKey::result_type get_key(V&& v) const {
+      return ExtractKey::operator()(std::forward<V>(v));
     }
     void set_key(pointer v, const key_type& k) const {
       SetKey::operator()(v, k);
@@ -1278,8 +1279,9 @@ class dense_hashtable {
   bool equals(const key_type& a, const key_type& b) const {
     return key_info.equals(a, b);
   }
-  typename ExtractKey::result_type get_key(const_reference v) const {
-    return key_info.get_key(v);
+  template <typename V>
+  typename ExtractKey::result_type get_key(V&& v) const {
+    return key_info.get_key(std::forward<V>(v));
   }
   void set_key(pointer v, const key_type& k) const { key_info.set_key(v, k); }
 

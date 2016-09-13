@@ -178,7 +178,7 @@ TEST(HashtableMoveTest, MoveCount)
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
     ASSERT_EQ(0, A::move_assign);
-    ASSERT_EQ(3, A::move_ctor);
+    ASSERT_EQ(2, A::move_ctor);
 }
 
 TEST(HashtableMoveTest, EmplaceMoveCount)
@@ -219,6 +219,8 @@ TEST(HashtableMoveTest, InsertKeyRValueCount)
     std::cout << A() << std::endl;
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_assign);
+    ASSERT_EQ(2, A::move_ctor);
 }
 
 TEST(HashtableMoveTest, InsertKeyMovedCount)
@@ -226,13 +228,15 @@ TEST(HashtableMoveTest, InsertKeyMovedCount)
     dense_hash_map<A, int, HashA> h;
     h.set_empty_key(A(0));
 
-    A::reset();
     auto m = std::make_pair(A(2), 2);
+    A::reset();
     h.insert(std::move(m));
 
     std::cout << A() << std::endl;
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_assign);
+    ASSERT_EQ(1, A::move_ctor);
 }
 
 TEST(HashtableMoveTest, InsertValueRValueCount)
