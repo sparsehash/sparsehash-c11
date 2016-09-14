@@ -1,6 +1,7 @@
 #include <sparsehash/dense_hash_map>
 #include <unordered_map>
 
+#include "fixture_unittests.h"
 #include "hashtable_test_interface.h"
 #include "gtest/gtest.h"
 #include <unordered_map>
@@ -11,6 +12,17 @@ using google::dense_hash_map;
 using google::dense_hash_set;
 
 namespace sparsehash_internal = google::sparsehash_internal;
+
+TYPED_TEST(HashtableAllTest, NormalIterators222) {
+  EXPECT_TRUE(this->ht_.begin() == this->ht_.end());
+  this->ht_.insert(this->UniqueObject(1));
+  {
+    typename TypeParam::iterator it = this->ht_.begin();
+    EXPECT_TRUE(it != this->ht_.end());
+    ++it;
+    EXPECT_TRUE(it == this->ht_.end());
+  }
+}
 
 TEST(HashtableMoveTest, Insert_RValue)
 {
