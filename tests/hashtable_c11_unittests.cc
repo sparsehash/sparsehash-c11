@@ -167,7 +167,7 @@ struct HashA
 };
 
 
-TEST(HashtableMoveTest, MoveCount)
+TEST(HashtableMoveTest, InsertRValue_ValueMoveCount)
 {
     dense_hash_map<int, A> h(10);
     h.set_empty_key(0);
@@ -177,11 +177,27 @@ TEST(HashtableMoveTest, MoveCount)
 
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
-    ASSERT_EQ(0, A::move_assign);
     ASSERT_EQ(2, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
 }
 
-TEST(HashtableMoveTest, EmplaceMoveCount)
+TEST(HashtableMoveTest, InsertMoved_ValueMoveCount)
+{
+    dense_hash_map<int, A> h(10);
+    h.set_empty_key(0);
+
+    auto p = std::make_pair(5, A());
+
+    A::reset();
+    h.insert(std::move(p));
+
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(1, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+}
+
+TEST(HashtableMoveTest, Emplace_ValueMoveCount)
 {
     dense_hash_map<int, A> h;
     h.set_empty_key(0);
@@ -191,24 +207,11 @@ TEST(HashtableMoveTest, EmplaceMoveCount)
 
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
-    ASSERT_EQ(0, A::move_assign);
     ASSERT_EQ(0, A::move_ctor);
-}
-TEST(HashtableMoveTest, EmplaceKeyMoveCount)
-{
-    dense_hash_map<A, int, HashA> h;
-    h.set_empty_key(A(0));
-
-    A::reset();
-    h.emplace(1, 2);
-
-    ASSERT_EQ(0, A::copy_ctor);
-    ASSERT_EQ(0, A::copy_assign);
     ASSERT_EQ(0, A::move_assign);
-    ASSERT_EQ(0, A::move_ctor);
 }
 
-TEST(HashtableMoveTest, InsertKeyRValueCount)
+TEST(HashtableMoveTest, InsertRValue_KeyMoveCount)
 {
     dense_hash_map<A, int, HashA> h;
     h.set_empty_key(A(0));
@@ -216,14 +219,13 @@ TEST(HashtableMoveTest, InsertKeyRValueCount)
     A::reset();
     h.insert(std::make_pair(A(2), 2));
 
-    std::cout << A() << std::endl;
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
-    ASSERT_EQ(0, A::move_assign);
     ASSERT_EQ(2, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
 }
 
-TEST(HashtableMoveTest, InsertKeyMovedCount)
+TEST(HashtableMoveTest, InsertMoved_KeyMoveCount)
 {
     dense_hash_map<A, int, HashA> h;
     h.set_empty_key(A(0));
@@ -232,40 +234,27 @@ TEST(HashtableMoveTest, InsertKeyMovedCount)
     A::reset();
     h.insert(std::move(m));
 
-    std::cout << A() << std::endl;
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
-    ASSERT_EQ(0, A::move_assign);
     ASSERT_EQ(1, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
 }
 
-TEST(HashtableMoveTest, InsertValueRValueCount)
+TEST(HashtableMoveTest, Emplace_KeyMoveCount)
 {
-    dense_hash_map<int, A> h;
-    h.set_empty_key(0);
+    dense_hash_map<A, int, HashA> h;
+    h.set_empty_key(A(0));
 
     A::reset();
-    auto p = h.insert(std::make_pair(2, A(2)));
+    h.emplace(1, 2);
 
-    std::cout << p.first->second << std::endl;
-    ASSERT_EQ(0, p.first->second.copy_ctor);
-    ASSERT_EQ(0, p.first->second.copy_assign);
-}
-TEST(HashtableMoveTest, InsertValueMovedCount)
-{
-    dense_hash_map<int, A> h;
-    h.set_empty_key(0);
-
-    A::reset();
-    auto m = std::make_pair(2, A(2));
-    auto p = h.insert(std::move(m));
-
-    std::cout << p.first->second << std::endl;
-    ASSERT_EQ(0, p.first->second.copy_ctor);
-    ASSERT_EQ(0, p.first->second.copy_assign);
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
 }
 
-TEST(HashtableMoveTest, OperatorInsertRValueCount)
+TEST(HashtableMoveTest, OperatorSqBck_InsertRValue_KeyMoveCount)
 {
     dense_hash_map<A, int, HashA> h;
     h.set_empty_key(A(0));
@@ -273,13 +262,24 @@ TEST(HashtableMoveTest, OperatorInsertRValueCount)
     A::reset();
     h[A(1)] = 1;
 
-    std::cout << A() << std::endl;
-    // without operator[](const K&): copy_ctor=2 copy_assign=0 move_ctor=1 move_assign=0
-    // now:    copy_ctor=0 copy_assign=0 move_ctor=1 move_assign=0
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
     ASSERT_EQ(1, A::move_ctor);
     ASSERT_EQ(0, A::move_assign);
+}
+
+TEST(HashtableMoveTest, OperatorSqBck_InsertMoved_ValueMoveCount)
+{
+    dense_hash_map<int, A> h;
+    h.set_empty_key(0);
+
+    A::reset();
+    h[1] = A(1);
+
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(1, A::move_ctor);
+    ASSERT_EQ(1, A::move_assign);
 }
 
 TEST(HashtableMoveTest, EraseConstIterator)
