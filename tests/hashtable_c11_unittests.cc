@@ -55,15 +55,15 @@ struct A
     A(const A&) =delete;
     A& operator=(const A&) =delete;
 
-    A(A&& a) { move_ctor = a.move_ctor + 1; }
-    A& operator=(A&& a) { move_assign = a.move_assign + 1; return *this; }
+    A(A&& a) { _i = a._i; move_ctor = a.move_ctor + 1; }
+    A& operator=(A&& a) { _i = a._i; move_assign = a.move_assign + 1; return *this; }
 
     int _i = 0;
     int move_ctor = 0;
     int move_assign = 0;
 };
 
-bool operator==(const A& a1, const A& a2) { return a1._i < a2._i; }
+bool operator==(const A& a1, const A& a2) { return a1._i == a2._i; }
 
 struct HashA
 {
@@ -88,5 +88,57 @@ TEST(HashtableMoveTest, EmplaceMoveCount)
     h.emplace(1, 2);
     ASSERT_EQ(0, h[1].move_assign);
     ASSERT_EQ(0, h[1].move_ctor);
+}
+
+
+struct B
+{
+    B() =default;
+    B(int i) noexcept : _i(i) {}
+
+    B(const B& b) { _i = b._i; copy_ctor = b.copy_ctor + 1; }
+    B& operator=(const B& b) { _i = b._i; copy_assign = b.copy_assign + 1; return *this; }
+
+    B(B&& b) { _i = b._i; move_ctor = b.move_ctor + 1; }
+    B& operator=(B&& b) { _i = b._i; move_assign = b.move_assign + 1; return *this; }
+
+    int _i = 0;
+    int copy_ctor = 0;
+    int copy_assign = 0;
+    int move_ctor = 0;
+    int move_assign = 0;
+};
+
+std::ostream& operator<<(std::ostream& os, const B& b) { return os << b._i; }
+
+bool operator==(const B& b1, const B& b2) { return b1._i == b2._i; }
+
+struct HashB
+{
+    std::size_t operator()(const B& b) const { return std::hash<int>()(b._i); }
+};
+
+TEST(HashtableMoveTest, EmplaceKeyMoveCount)
+{
+    dense_hash_map<B, int, HashB> h;
+    h.set_empty_key(B(0));
+
+    auto p = h.emplace(1, 2);
+    ASSERT_EQ(0, p.first->first.copy_ctor);
+    ASSERT_EQ(0, p.first->first.copy_assign);
+    ASSERT_EQ(0, p.first->first.move_ctor);
+    ASSERT_EQ(0, p.first->first.move_assign);
+}
+
+TEST(HashtableMoveTest, InsertKeyMoveCount)
+{
+    dense_hash_map<B, int, HashB> h;
+    h.set_empty_key(B(0));
+
+    auto p = h.insert(std::make_pair(B(2), 2));
+    ASSERT_EQ(0, p.first->first.copy_ctor);
+    ASSERT_EQ(0, p.first->first.copy_assign);
+    ASSERT_EQ(0, p.first->first.move_ctor);
+    ASSERT_EQ(0, p.first->first.move_assign);
 }
 
