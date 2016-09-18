@@ -388,3 +388,30 @@ TEST(DenseHashMapMoveTest, CBeginCEnd)
     ASSERT_TRUE(end == h.cend());
 }
 
+TEST(DenseHashSetMoveTest, Insert)
+{
+    dense_hash_set<A, HashA> h;
+    h.set_empty_key(A(0));
+
+    A::reset();
+    h.insert(A(1));
+
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(1, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+}
+
+TEST(DenseHashSetMoveTest, Emplace)
+{
+    dense_hash_set<A, HashA> h;
+    h.set_empty_key(A(0));
+
+    A::reset();
+    h.emplace(1);
+
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+}
