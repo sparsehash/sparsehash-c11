@@ -13,18 +13,7 @@ using google::dense_hash_set;
 
 namespace sparsehash_internal = google::sparsehash_internal;
 
-TYPED_TEST(HashtableAllTest, NormalIterators222) {
-  EXPECT_TRUE(this->ht_.begin() == this->ht_.end());
-  this->ht_.insert(this->UniqueObject(1));
-  {
-    typename TypeParam::iterator it = this->ht_.begin();
-    EXPECT_TRUE(it != this->ht_.end());
-    ++it;
-    EXPECT_TRUE(it == this->ht_.end());
-  }
-}
-
-TEST(HashtableMoveTest, Insert_RValue)
+TEST(DenseHashMapMoveTest, Insert_RValue)
 {
     dense_hash_map<int, std::unique_ptr<int>> h;
     h.set_empty_key(0);
@@ -43,7 +32,7 @@ TEST(HashtableMoveTest, Insert_RValue)
     ASSERT_EQ(2, (int)h.size());
 }
 
-TEST(HashtableMoveTest, Emplace)
+TEST(DenseHashMapMoveTest, Emplace)
 {
     dense_hash_map<int, std::unique_ptr<int>> h;
     h.set_empty_key(0);
@@ -66,7 +55,7 @@ TEST(HashtableMoveTest, Emplace)
     ASSERT_FALSE(h.emplace(12, new int(1)).second);
 }
 
-TEST(HashtableMoveTest, EmplaceHint)
+TEST(DenseHashMapMoveTest, EmplaceHint)
 {
     dense_hash_map<int, int> h;
     h.set_empty_key(0);
@@ -86,7 +75,7 @@ TEST(HashtableMoveTest, EmplaceHint)
     ASSERT_EQ(6, (int)h.size());
 }
 
-TEST(HashtableMoveTest, EmplaceHint_SpeedComparison)
+TEST(DenseHashMapMoveTest, EmplaceHint_SpeedComparison)
 {
     static const int Elements = 1e6;
     static const int Duplicates = 5;
@@ -179,7 +168,7 @@ struct HashA
 };
 
 
-TEST(HashtableMoveTest, InsertRValue_ValueMoveCount)
+TEST(DenseHashMapMoveTest, InsertRValue_ValueMoveCount)
 {
     dense_hash_map<int, A> h(10);
     h.set_empty_key(0);
@@ -193,7 +182,7 @@ TEST(HashtableMoveTest, InsertRValue_ValueMoveCount)
     ASSERT_EQ(0, A::move_assign);
 }
 
-TEST(HashtableMoveTest, InsertMoved_ValueMoveCount)
+TEST(DenseHashMapMoveTest, InsertMoved_ValueMoveCount)
 {
     dense_hash_map<int, A> h(10);
     h.set_empty_key(0);
@@ -209,7 +198,7 @@ TEST(HashtableMoveTest, InsertMoved_ValueMoveCount)
     ASSERT_EQ(0, A::move_assign);
 }
 
-TEST(HashtableMoveTest, Emplace_ValueMoveCount)
+TEST(DenseHashMapMoveTest, Emplace_ValueMoveCount)
 {
     dense_hash_map<int, A> h;
     h.set_empty_key(0);
@@ -223,7 +212,7 @@ TEST(HashtableMoveTest, Emplace_ValueMoveCount)
     ASSERT_EQ(0, A::move_assign);
 }
 
-TEST(HashtableMoveTest, InsertRValue_KeyMoveCount)
+TEST(DenseHashMapMoveTest, InsertRValue_KeyMoveCount)
 {
     dense_hash_map<A, int, HashA> h;
     h.set_empty_key(A(0));
@@ -237,7 +226,7 @@ TEST(HashtableMoveTest, InsertRValue_KeyMoveCount)
     ASSERT_EQ(0, A::move_assign);
 }
 
-TEST(HashtableMoveTest, InsertMoved_KeyMoveCount)
+TEST(DenseHashMapMoveTest, InsertMoved_KeyMoveCount)
 {
     dense_hash_map<A, int, HashA> h;
     h.set_empty_key(A(0));
@@ -252,7 +241,7 @@ TEST(HashtableMoveTest, InsertMoved_KeyMoveCount)
     ASSERT_EQ(0, A::move_assign);
 }
 
-TEST(HashtableMoveTest, Emplace_KeyMoveCount)
+TEST(DenseHashMapMoveTest, Emplace_KeyMoveCount)
 {
     dense_hash_map<A, int, HashA> h;
     h.set_empty_key(A(0));
@@ -266,7 +255,7 @@ TEST(HashtableMoveTest, Emplace_KeyMoveCount)
     ASSERT_EQ(0, A::move_assign);
 }
 
-TEST(HashtableMoveTest, OperatorSqBck_InsertRValue_KeyMoveCount)
+TEST(DenseHashMapMoveTest, OperatorSqBck_InsertRValue_KeyMoveCount)
 {
     dense_hash_map<A, int, HashA> h;
     h.set_empty_key(A(0));
@@ -280,7 +269,7 @@ TEST(HashtableMoveTest, OperatorSqBck_InsertRValue_KeyMoveCount)
     ASSERT_EQ(0, A::move_assign);
 }
 
-TEST(HashtableMoveTest, OperatorSqBck_InsertMoved_ValueMoveCount)
+TEST(DenseHashMapMoveTest, OperatorSqBck_InsertMoved_ValueMoveCount)
 {
     dense_hash_map<int, A> h;
     h.set_empty_key(0);
@@ -294,7 +283,7 @@ TEST(HashtableMoveTest, OperatorSqBck_InsertMoved_ValueMoveCount)
     ASSERT_EQ(1, A::move_assign);
 }
 
-TEST(HashtableMoveTest, EraseConstIterator)
+TEST(DenseHashMapMoveTest, EraseConstIterator)
 {
     dense_hash_map<int, int> h;
     h.set_empty_key(0);
@@ -306,7 +295,7 @@ TEST(HashtableMoveTest, EraseConstIterator)
     ASSERT_EQ(0, (int)h.size());
 }
 
-TEST(HashtableMoveTest, EraseRange)
+TEST(DenseHashMapMoveTest, EraseRange)
 {
     dense_hash_map<int, int> h;
     h.set_empty_key(0);
@@ -333,7 +322,7 @@ TEST(HashtableMoveTest, EraseRange)
     ASSERT_TRUE(h.empty());
 }
 
-TEST(HashtableMoveTest, EraseRangeEntireMap)
+TEST(DenseHashMapMoveTest, EraseRangeEntireMap)
 {
     dense_hash_map<int, int> h;
     h.set_empty_key(0);
@@ -346,7 +335,7 @@ TEST(HashtableMoveTest, EraseRangeEntireMap)
     ASSERT_TRUE(h.empty());
 }
 
-TEST(HashtableMoveTest, EraseNextElementReturned)
+TEST(DenseHashMapMoveTest, EraseNextElementReturned)
 {
     dense_hash_map<int, int> h;
     h.set_empty_key(0);
@@ -362,7 +351,7 @@ TEST(HashtableMoveTest, EraseNextElementReturned)
     ASSERT_TRUE(h.end() == h.erase(h.begin())); // end() is returned when erasing the second and last element
 }
 
-TEST(HashtableMoveTest, EraseNumberOfElementsDeleted)
+TEST(DenseHashMapMoveTest, EraseNumberOfElementsDeleted)
 {
     dense_hash_map<int, int> h;
     h.set_empty_key(0);
@@ -378,7 +367,7 @@ TEST(HashtableMoveTest, EraseNumberOfElementsDeleted)
     ASSERT_TRUE(h.empty());
 }
 
-TEST(HashtableMoveTest, CBeginCEnd)
+TEST(DenseHashMapMoveTest, CBeginCEnd)
 {
     dense_hash_map<int, int> h;
     h.set_empty_key(0);
