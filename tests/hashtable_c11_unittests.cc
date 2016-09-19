@@ -13,18 +13,24 @@ using google::dense_hash_set;
 
 namespace sparsehash_internal = google::sparsehash_internal;
 
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args)
+{
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
 TEST(DenseHashMapMoveTest, Insert_RValue)
 {
     dense_hash_map<int, std::unique_ptr<int>> h;
     h.set_empty_key(0);
 
-    auto p1 = std::make_pair(5, std::unique_ptr<int>(new int(1234)));
+    auto p1 = std::make_pair(5, make_unique<int>(1234));
     auto p = h.insert(std::move(p1));
     ASSERT_EQ(true, p.second);
     ASSERT_EQ(5, p.first->first);
     ASSERT_EQ(1234, *p.first->second);
 
-    p = h.insert(std::make_pair(10, std::unique_ptr<int>(new int(5678))));
+    p = h.insert(std::make_pair(10, make_unique<int>(5678)));
     ASSERT_EQ(true, p.second);
     ASSERT_EQ(10, p.first->first);
     ASSERT_EQ(5678, *p.first->second);
@@ -37,22 +43,22 @@ TEST(DenseHashMapMoveTest, Emplace)
     dense_hash_map<int, std::unique_ptr<int>> h;
     h.set_empty_key(0);
 
-    auto p = h.emplace(5, new int(1234));
+    auto p = h.emplace(5, make_unique<int>(1234));
     ASSERT_EQ(true, p.second);
     ASSERT_EQ(5, p.first->first);
     ASSERT_EQ(1234, *p.first->second);
 
-    p = h.emplace(10, new int(5678));
+    p = h.emplace(10, make_unique<int>(5678));
     ASSERT_EQ(true, p.second);
     ASSERT_EQ(10, p.first->first);
     ASSERT_EQ(5678, *p.first->second);
 
     ASSERT_EQ(2, (int)h.size());
 
-    ASSERT_TRUE(h.emplace(11, new int(1)).second);
-    ASSERT_FALSE(h.emplace(11, new int(1)).second);
-    ASSERT_TRUE(h.emplace(12, new int(1)).second);
-    ASSERT_FALSE(h.emplace(12, new int(1)).second);
+    ASSERT_TRUE(h.emplace(11, make_unique<int>(1)).second);
+    ASSERT_FALSE(h.emplace(11, make_unique<int>(1)).second);
+    ASSERT_TRUE(h.emplace(12, make_unique<int>(1)).second);
+    ASSERT_FALSE(h.emplace(12, make_unique<int>(1)).second);
 }
 
 TEST(DenseHashMapMoveTest, EmplaceHint)
