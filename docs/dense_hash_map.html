@@ -1324,6 +1324,19 @@ key_type&amp; k) </pre>
 
 <TR>
 <TD VAlign=top>
+   <pre>data_type&amp; operator[](key_type&amp;&amp; k) <A
+   href="http://www.sgi.com/tech/stl/#3">[3]</A> </pre>
+</TD>
+<TD VAlign=top>
+   <tt>dense_hash_map</tt>
+</TD>
+<TD VAlign=top>
+   <A HREF="#new">See below</A>.
+</TD>
+</TR>
+
+<TR>
+<TD VAlign=top>
    <tt>template &lt;ValueSerializer, OUTPUT&gt;
        bool serialize(ValueSerializer serializer, OUTPUT *fp)</tt>
 </TD>
@@ -1491,6 +1504,23 @@ Container</tt> requirements, but are specific to
    <pre>
 data_type&amp;
 operator[](const key_type&amp; k) <A
+href="http://www.sgi.com/tech/stl/#3">[3]</A>
+</pre>
+</TD>
+<TD VAlign=top>
+   Returns a reference to the object that is associated with
+   a particular key.  If the <tt>dense_hash_map</tt> does not already
+   contain such an object, <tt>operator[]</tt> inserts the default
+   object <tt>data_type()</tt>. <A
+   href="http://www.sgi.com/tech/stl/#3">[3]</A>
+</TD>
+</TR>
+
+<TR>
+<TD VAlign=top>
+   <pre>
+data_type&amp;
+operator[](key_type&amp;&amp; k) <A
 href="http://www.sgi.com/tech/stl/#3">[3]</A>
 </pre>
 </TD>
