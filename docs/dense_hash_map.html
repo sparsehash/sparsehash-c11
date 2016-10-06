@@ -106,7 +106,7 @@ struct eqstr
 int main()
 {
   dense_hash_map&lt;const char*, int, hash&lt;const char*&gt;, eqstr&gt; months;
-  
+
   months.set_empty_key(NULL);
   months[&quot;january&quot;] = 31;
   months[&quot;february&quot;] = 28;
@@ -120,7 +120,7 @@ int main()
   months[&quot;october&quot;] = 31;
   months[&quot;november&quot;] = 30;
   months[&quot;december&quot;] = 31;
-  
+
   cout &lt;&lt; &quot;september -&gt; &quot; &lt;&lt; months[&quot;september&quot;] &lt;&lt; endl;
   cout &lt;&lt; &quot;april     -&gt; &quot; &lt;&lt; months[&quot;april&quot;] &lt;&lt; endl;
   cout &lt;&lt; &quot;june      -&gt; &quot; &lt;&lt; months[&quot;june&quot;] &lt;&lt; endl;
@@ -173,7 +173,7 @@ compatible with the tr1 class <code>unordered_map</code>.
 </TD>
 <TD VAlign=top>
    The <A href="http://www.sgi.com/tech/stl/HashFunction.html">hash function</A> used by the
-   hash_map.  This is also defined as <tt>dense_hash_map::hasher</tt>.  
+   hash_map.  This is also defined as <tt>dense_hash_map::hasher</tt>.
    <br><b>Note:</b> Hashtable performance depends heavily on the choice of
    hash function.  See <A HREF="performance.html#hashfn">the performance
    page</A> for more information.
@@ -928,7 +928,7 @@ dense_hash_map(InputIterator f, InputIterator l, size_type n) </pre>
    <pre>template &lt;class <A
 href="http://www.sgi.com/tech/stl/InputIterator.html">InputIterator</A>&gt;
 dense_hash_map(InputIterator f, InputIterator l, size_type n, const
-hasher&amp; h) </pre> <A href="#2">[2]</A> 
+hasher&amp; h) </pre> <A href="#2">[2]</A>
 </TD>
 <TD VAlign=top>
     <A
@@ -1034,7 +1034,7 @@ hasher&amp; h, const key_equal&amp; k, const allocator_type&amp; a) </pre>
 <TD VAlign=top>
    <pre>template &lt;class <A
 href="http://www.sgi.com/tech/stl/InputIterator.html">InputIterator</A>&gt;
-void insert(InputIterator f, InputIterator l) </pre> <A href="#2">[2]</A> 
+void insert(InputIterator f, InputIterator l) </pre> <A href="#2">[2]</A>
 </TD>
 <TD VAlign=top>
     <A
@@ -1405,7 +1405,7 @@ Container</tt> requirements, but are specific to
 <TR>
 <TD VAlign=top>
    <pre>
-data_type&amp; 
+data_type&amp;
 operator[](const key_type&amp; k) <A
 href="http://www.sgi.com/tech/stl/#3">[3]</A>
 </pre>
@@ -1748,14 +1748,14 @@ classes related to <tt>dense_hash_map</tt>.</p>
 
 <tt><A href="http://www.sgi.com/tech/stl/hash_map.html">hash_map</A></tt>,
 <A href="http://www.sgi.com/tech/stl/AssociativeContainer.html">Associative Container</A>,
-<A href="http://www.sgi.com/tech/stl/HashedAssociativeContainer.html">Hashed Associative Container</A>, 
+<A href="http://www.sgi.com/tech/stl/HashedAssociativeContainer.html">Hashed Associative Container</A>,
 <A href="http://www.sgi.com/tech/stl/PairAssociativeContainer.html">Pair Associative Container</A>,
-<A href="http://www.sgi.com/tech/stl/UniqueHashedAssociativeContainer.html">Unique Hashed Associative Container</A>, 
+<A href="http://www.sgi.com/tech/stl/UniqueHashedAssociativeContainer.html">Unique Hashed Associative Container</A>,
 <tt><A href="http://www.sgi.com/tech/stl/set.html">set</A></tt>,
 <tt><A href="http://www.sgi.com/tech/stl/Map.html">map</A></tt>
 <tt><A href="http://www.sgi.com/tech/stl/multiset.html">multiset</A></tt>,
 <tt><A href="http://www.sgi.com/tech/stl/Multimap.html">multimap</A></tt>,
-<tt><A href="http://www.sgi.com/tech/stl/hash_set.html">hash_set</A></tt>, 
+<tt><A href="http://www.sgi.com/tech/stl/hash_set.html">hash_set</A></tt>,
 <tt><A href="http://www.sgi.com/tech/stl/hash_multiset.html">hash_multiset</A></tt>,
 <tt><A href="http://www.sgi.com/tech/stl/hash_multimap.html">hash_multimap</A></tt>,
 <tt><A href="sparse_hash_map.html">sparse_hash_map</A></tt>,
@@ -1763,4 +1763,4 @@ classes related to <tt>dense_hash_map</tt>.</p>
 <tt><A href="dense_hash_set.html">dense_hash_set</A></tt>
 
 </BODY>
-</HTML> 
+</HTML>
