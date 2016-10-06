@@ -1006,6 +1006,21 @@ hasher&amp; h, const key_equal&amp; k, const allocator_type&amp; a) </pre>
 
 <TR>
 <TD VAlign=top>
+   <pre>pair&lt;iterator, bool&gt; insert(value_type&amp;&amp; x)
+</pre>
+</TD>
+<TD VAlign=top>
+    <A
+    href="http://www.sgi.com/tech/stl/UniqueAssociativeContainer.html">Unique
+    Associative Container</A>
+</TD>
+<TD VAlign=top>
+   Inserts <tt>x</tt> into the <tt>dense_hash_set</tt>.
+</TD>
+</TR>
+
+<TR>
+<TD VAlign=top>
    <pre>template &lt;class <A
 href="http://www.sgi.com/tech/stl/InputIterator.html">InputIterator</A>&gt;
 void insert(InputIterator f, InputIterator l) </pre> <A href="#1">[2]</A>
@@ -1017,6 +1032,35 @@ void insert(InputIterator f, InputIterator l) </pre> <A href="#1">[2]</A>
 </TD>
 <TD VAlign=top>
    Inserts a range into the <tt>dense_hash_set</tt>.
+</TD>
+</TR>
+
+<TR>
+<TD VAlign=top>
+   <pre>template&lt;class... Args&gt;
+pair&lt;iterator, bool&gt; emplace(Args&amp;&amp;... args)</pre>
+</TD>
+<TD VAlign=top>
+   <tt>dense_hash_set</tt>
+</TD>
+<TD VAlign=top>
+   Inserts a new element into the <tt>dense_hash_set</tt>. The element is
+   constructed in-place with the given <tt>args</tt>.
+</TD>
+</TR>
+
+<TR>
+<TD VAlign=top>
+   <pre>template&lt;class... Args&gt;
+pair&lt;iterator, bool&gt; emplace_hint(const_iterator hint, Args&amp;&amp;... args)</pre>
+</TD>
+<TD VAlign=top>
+   <tt>dense_hash_set</tt>
+</TD>
+<TD VAlign=top>
+   Inserts a new element into the <tt>dense_hash_set</tt>, using <tt>hint</tt>
+   as a suggestion where the element should go. The element is constructed
+   in-place with the given <tt>args</tt>.
 </TD>
 </TR>
 
