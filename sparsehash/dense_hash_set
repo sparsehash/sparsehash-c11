@@ -116,7 +116,8 @@ class dense_hash_set {
   // Apparently identity is not stl-standard, so we define our own
   struct Identity {
     typedef const Value& result_type;
-    const Value& operator()(const Value& v) const { return v; }
+    template <typename V>
+    const Value& operator()(V&& v) const { return v; }
   };
   struct SetKey {
     void operator()(Value* value, const Value& new_key) const {
@@ -151,6 +152,8 @@ class dense_hash_set {
   // Iterator functions -- recall all iterators are const
   iterator begin() const { return rep.begin(); }
   iterator end() const { return rep.end(); }
+  const_iterator cbegin() const { return rep.begin(); }
+  const_iterator cend() const { return rep.end(); }
 
   // These come from tr1's unordered_set. For us, a bucket has 0 or 1 elements.
   local_iterator begin(size_type i) const { return rep.begin(i); }
@@ -245,6 +248,22 @@ class dense_hash_set {
     std::pair<typename ht::iterator, bool> p = rep.insert(obj);
     return std::pair<iterator, bool>(p.first, p.second);  // const to non-const
   }
+
+  std::pair<iterator, bool> insert(value_type&& obj) {
+    std::pair<typename ht::iterator, bool> p = rep.insert(std::move(obj));
+    return std::pair<iterator, bool>(p.first, p.second);  // const to non-const
+  }
+
+  template <typename... Args>
+  std::pair<iterator, bool> emplace(Args&&... args) {
+    return rep.emplace(std::forward<Args>(args)...);
+  }
+
+  template <typename... Args>
+  std::pair<iterator, bool> emplace_hint(const_iterator hint, Args&&... args) {
+    return rep.emplace_hint(hint, std::forward<Args>(args)...);
+  }
+
   template <class InputIterator>
   void insert(InputIterator f, InputIterator l) {
     rep.insert(f, l);
@@ -266,8 +285,8 @@ class dense_hash_set {
 
   // These are standard
   size_type erase(const key_type& key) { return rep.erase(key); }
-  void erase(iterator it) { rep.erase(it); }
-  void erase(iterator f, iterator l) { rep.erase(f, l); }
+  iterator erase(const_iterator it) { return rep.erase(it); }
+  iterator erase(const_iterator f, const_iterator l) { return rep.erase(f, l); }
 
   // Comparison
   bool operator==(const dense_hash_set& hs) const { return rep == hs.rep; }

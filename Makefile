@@ -21,6 +21,9 @@ bench: bench.o
 gmock-gtest-all.o : 
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(TEST_DIR)/gtest/gmock-gtest-all.cc
 
+fixture_unittests.o : $(TEST_DIR)/fixture_unittests.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(TEST_DIR)/fixture_unittests.cc
+
 simple_unittests.o : $(TEST_DIR)/simple_unittests.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(TEST_DIR)/simple_unittests.cc 
 
@@ -33,8 +36,11 @@ allocator_unittests.o : $(TEST_DIR)/allocator_unittests.cc
 hashtable_unittests.o: $(TEST_DIR)/hashtable_unittests.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(TEST_DIR)/hashtable_unittests.cc 
 
+hashtable_c11_unittests.o: $(TEST_DIR)/hashtable_c11_unittests.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(TEST_DIR)/hashtable_c11_unittests.cc 
+
 testmain.o : $(TEST_DIR)/*.cc 
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(TEST_DIR)/testmain.cc 	
 
-sparsehash_unittests : simple_unittests.o sparsetable_unittests.o allocator_unittests.o hashtable_unittests.o testmain.o gmock-gtest-all.o
+sparsehash_unittests : simple_unittests.o sparsetable_unittests.o allocator_unittests.o hashtable_unittests.o hashtable_c11_unittests.o fixture_unittests.o testmain.o gmock-gtest-all.o
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)

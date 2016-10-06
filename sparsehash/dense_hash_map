@@ -99,6 +99,7 @@
 #include <functional>  // for equal_to<>, select1st<>, etc
 #include <memory>      // for alloc
 #include <utility>     // for pair<>
+#include <type_traits> // for enable_if, is_constructible, etc
 #include <sparsehash/internal/densehashtable.h>  // IWYU pragma: export
 #include <sparsehash/internal/libc_allocator_with_realloc.h>
 
@@ -112,26 +113,22 @@ class dense_hash_map {
   // Apparently select1st is not stl-standard, so we define our own
   struct SelectKey {
     typedef const Key& result_type;
-    const Key& operator()(const std::pair<const Key, T>& p) const {
+    template <typename Pair>
+    const Key& operator()(Pair&& p) const {
       return p.first;
     }
   };
   struct SetKey {
     void operator()(std::pair<const Key, T>* value, const Key& new_key) const {
-      *const_cast<Key*>(&value->first) = new_key;
+      using NCKey = typename std::remove_cv<Key>::type;
+      *const_cast<NCKey*>(&value->first) = new_key;
+
       // It would be nice to clear the rest of value here as well, in
       // case it's taking up a lot of memory.  We do this by clearing
       // the value.  This assumes T has a zero-arg constructor!
       value->second = T();
     }
   };
-  // For operator[].
-  struct DefaultValue {
-    std::pair<const Key, T> operator()(const Key& key) {
-      return std::make_pair(key, T());
-    }
-  };
-
   // The actual data
   typedef dense_hashtable<std::pair<const Key, T>, Key, HashFcn, SelectKey,
                           SetKey, EqualKey, Alloc> ht;
@@ -163,6 +160,8 @@ class dense_hash_map {
   iterator end() { return rep.end(); }
   const_iterator begin() const { return rep.begin(); }
   const_iterator end() const { return rep.end(); }
+  const_iterator cbegin() const { return rep.begin(); }
+  const_iterator cend() const { return rep.end(); }
 
   // These come from tr1's unordered_map. For us, a bucket has 0 or 1 elements.
   local_iterator begin(size_type i) { return rep.begin(i); }
@@ -254,7 +253,11 @@ class dense_hash_map {
     // If key is in the hashtable, returns find(key)->second,
     // otherwise returns insert(value_type(key, T()).first->second.
     // Note it does not create an empty T unless the find fails.
-    return rep.template find_or_insert<DefaultValue>(key).second;
+    return rep.template find_or_insert<data_type>(key).second;
+  }
+
+  data_type& operator[](key_type&& key) {
+    return rep.template find_or_insert<data_type>(std::move(key)).second;
   }
 
   size_type count(const key_type& key) const { return rep.count(key); }
@@ -271,6 +274,28 @@ class dense_hash_map {
   std::pair<iterator, bool> insert(const value_type& obj) {
     return rep.insert(obj);
   }
+
+  template <typename Pair, typename = typename std::enable_if<std::is_constructible<value_type, Pair&&>::value>::type>
+  std::pair<iterator, bool> insert(Pair&& obj) {
+    return rep.insert(std::forward<Pair>(obj));
+  }
+
+  // overload to allow {} syntax: .insert( { {key}, {args} } )
+  std::pair<iterator, bool> insert(value_type&& obj) {
+    return rep.insert(std::move(obj));
+  }
+
+  template <typename... Args>
+  std::pair<iterator, bool> emplace(Args&&... args) {
+    return rep.emplace(std::forward<Args>(args)...);
+  }
+
+  template <typename... Args>
+  std::pair<iterator, bool> emplace_hint(const_iterator hint, Args&&... args) {
+    return rep.emplace_hint(hint, std::forward<Args>(args)...);
+  }
+
+
   template <class InputIterator>
   void insert(InputIterator f, InputIterator l) {
     rep.insert(f, l);
@@ -283,12 +308,9 @@ class dense_hash_map {
   // THESE ARE NON-STANDARD!  I make you specify an "impossible" key
   // value to identify deleted and empty buckets.  You can change the
   // deleted key as time goes on, or get rid of it entirely to be insert-only.
-  void set_empty_key(const key_type& key) {           // YOU MUST CALL THIS!
-    rep.set_empty_key(value_type(key, data_type()));  // rep wants a value
-  }
-  key_type empty_key() const {
-    return rep.empty_key().first;  // rep returns a value
-  }
+   // YOU MUST CALL THIS!
+  void set_empty_key(const key_type& key) { rep.set_empty_key(key); }
+  key_type empty_key() const {  return rep.empty_key(); }
 
   void set_deleted_key(const key_type& key) { rep.set_deleted_key(key); }
   void clear_deleted_key() { rep.clear_deleted_key(); }
@@ -296,8 +318,8 @@ class dense_hash_map {
 
   // These are standard
   size_type erase(const key_type& key) { return rep.erase(key); }
-  void erase(iterator it) { rep.erase(it); }
-  void erase(iterator f, iterator l) { rep.erase(f, l); }
+  iterator erase(const_iterator it) { return rep.erase(it); }
+  iterator erase(const_iterator f, const_iterator l) { return rep.erase(f, l); }
 
   // Comparison
   bool operator==(const dense_hash_map& hs) const { return rep == hs.rep; }
