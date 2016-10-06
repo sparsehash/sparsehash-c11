@@ -293,7 +293,11 @@ class Rusage {
   steady_clock::time_point start_;
 };
 
-inline void Rusage::Reset() { start_ = steady_clock::now(); }
+inline void Rusage::Reset() { 
+  g_num_copies = 0;
+  g_num_hashes = 0;  
+  start_ = steady_clock::now(); 
+}
 
 inline double Rusage::UserTime() {
   auto diff = steady_clock::now() - start_;
@@ -655,7 +659,7 @@ int main(int argc, char** argv) {
   if (FLAGS_test_8_bytes) test_all_maps<HashObject<8, 8>>(8, iters / 2);
   if (FLAGS_test_16_bytes) test_all_maps<HashObject<16, 16>>(16, iters / 4);
   if (FLAGS_test_256_bytes)
-    test_all_maps<HashObject<256, 256>>(256, iters / 32);
+    test_all_maps<HashObject<256, 32>>(256, iters / 32);
 
   return 0;
 }
