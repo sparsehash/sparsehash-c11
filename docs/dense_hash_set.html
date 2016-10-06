@@ -1102,7 +1102,7 @@ pair&lt;iterator, bool&gt; emplace_hint(const_iterator hint, Args&amp;&amp;... a
 
 <TR>
 <TD VAlign=top>
-   <tt>void erase(iterator pos)</tt>
+   <tt>iterator erase(const_iterator pos)</tt>
 </TD>
 <TD VAlign=top>
     <A
@@ -1110,7 +1110,7 @@ pair&lt;iterator, bool&gt; emplace_hint(const_iterator hint, Args&amp;&amp;... a
     Container</A>
 </TD>
 <TD VAlign=top>
-   Erases the element pointed to by <tt>pos</tt>.
+   Erases the element pointed to by <tt>pos</tt>. Returns the iterator following the last removed element.
    <A href="#4">[4]</A>
 </TD>
 </TR>
@@ -1132,7 +1132,7 @@ pair&lt;iterator, bool&gt; emplace_hint(const_iterator hint, Args&amp;&amp;... a
 
 <TR>
 <TD VAlign=top>
-   <tt>void erase(iterator first, iterator last)</tt>
+   <tt>iterator erase(const_iterator first, const_iterator last)</tt>
 </TD>
 <TD VAlign=top>
     <A
@@ -1140,7 +1140,7 @@ pair&lt;iterator, bool&gt; emplace_hint(const_iterator hint, Args&amp;&amp;... a
     Container</A>
 </TD>
 <TD VAlign=top>
-   Erases all elements in a range.
+   Erases all elements in a range. Returns the iterator following the last removed element.
    <A href="#4">[4]</A>
 </TD>
 </TR>
