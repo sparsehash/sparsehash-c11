@@ -12,3 +12,5 @@ include_directories(.)
 enable_testing()
 add_subdirectory(tests)
 
+install(DIRECTORY sparsehash DESTINATION include/google)
+
