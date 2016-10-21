@@ -490,8 +490,8 @@ class dense_hashtable {
   }
 
  private:
-  void fill_range_with_empty(pointer table_start, size_type num_buckets) {
-    for (size_type i = 0; i < num_buckets; ++i)
+  void fill_range_with_empty(pointer table_start, size_type count) {
+    for (size_type i = 0; i < count; ++i)
     {
       new(&table_start[i]) value_type();
       set_key(&table_start[i], key_info.empty_key);
