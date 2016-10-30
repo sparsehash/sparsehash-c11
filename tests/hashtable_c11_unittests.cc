@@ -417,6 +417,26 @@ TEST(DenseHashMapMoveTest, CBeginCEnd)
     ASSERT_TRUE(end == h.cend());
 }
 
+TEST(DenseHashSetMoveTest, MoveConstructor)
+{
+    dense_hash_set<A, HashA> h;
+    h.set_empty_key(A(0));
+
+    const int Elements = 100;
+    for (int i = 1; i <= Elements; ++i)
+        h.emplace(i);
+
+    A::reset();
+    dense_hash_set<A, HashA> h2(std::move(h));
+
+    ASSERT_EQ(Elements, (int)h2.size());
+
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(2, A::move_ctor); // swap() of empty & deleted key
+    ASSERT_EQ(4, A::move_assign);
+}
+
 TEST(DenseHashSetMoveTest, Insert)
 {
     dense_hash_set<A, HashA> h;
