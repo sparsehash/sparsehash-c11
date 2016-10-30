@@ -737,8 +737,14 @@ class dense_hashtable {
     settings.reset_thresholds(bucket_count());
     copy_or_move_from(ht, min_buckets_wanted);  // copy_or_move_from() ignores deleted entries
   }
+
+  dense_hashtable(dense_hashtable&& ht)
+      : dense_hashtable() {
+    swap(ht);
+  }
+
   dense_hashtable(dense_hashtable&& ht,
-                  size_type min_buckets_wanted = HT_DEFAULT_STARTING_BUCKETS)
+                  size_type min_buckets_wanted)
       : settings(ht.settings),
         key_info(ht.key_info),
         num_deleted(0),

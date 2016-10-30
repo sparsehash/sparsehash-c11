@@ -174,6 +174,29 @@ struct HashA
 };
 
 
+TEST(DenseHashMapMoveTest, MoveConstructor)
+{
+    dense_hash_map<int, A> h(10);
+    h.set_empty_key(0);
+
+    h.emplace(1, 2);
+    h.emplace(2, 3);
+    h.emplace(3, 4);
+    A::reset();
+
+    dense_hash_map<int, A> h2(std::move(h));
+
+    ASSERT_EQ(3, (int)h2.size());
+
+    for (auto&& p : h2)
+        std::cout << p.first << std::endl;
+
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+}
+
 TEST(DenseHashMapMoveTest, InsertRValue_ValueMoveCount)
 {
     dense_hash_map<int, A> h(10);
