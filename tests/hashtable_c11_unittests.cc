@@ -197,6 +197,26 @@ TEST(DenseHashMapMoveTest, MoveConstructor)
     ASSERT_EQ(0, A::move_assign);
 }
 
+TEST(DenseHashMapMoveTest, MoveAssignment)
+{
+    dense_hash_map<int, A> h(10), h2;
+    h.set_empty_key(0);
+
+    h.emplace(1, 2);
+    h.emplace(2, 3);
+    h.emplace(3, 4);
+    A::reset();
+
+    h2 = std::move(h);
+
+    ASSERT_EQ(3, (int)h2.size());
+
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+}
+
 TEST(DenseHashMapMoveTest, InsertRValue_ValueMoveCount)
 {
     dense_hash_map<int, A> h(10);
@@ -428,6 +448,26 @@ TEST(DenseHashSetMoveTest, MoveConstructor)
 
     A::reset();
     dense_hash_set<A, HashA> h2(std::move(h));
+
+    ASSERT_EQ(Elements, (int)h2.size());
+
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(2, A::move_ctor); // swap() of empty & deleted key
+    ASSERT_EQ(4, A::move_assign);
+}
+
+TEST(DenseHashSetMoveTest, MoveAssignment)
+{
+    dense_hash_set<A, HashA> h, h2;
+    h.set_empty_key(A(0));
+
+    const int Elements = 100;
+    for (int i = 1; i <= Elements; ++i)
+        h.emplace(i);
+
+    A::reset();
+    h2 = std::move(h);
 
     ASSERT_EQ(Elements, (int)h2.size());
 

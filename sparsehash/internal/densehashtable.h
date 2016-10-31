@@ -779,6 +779,12 @@ class dense_hashtable {
     return *this;
   }
 
+  dense_hashtable& operator=(dense_hashtable&& ht) {
+    if (&ht == this) return *this;  // don't copy onto ourselves
+    swap(ht);
+    return *this;
+  }
+
   ~dense_hashtable() {
     if (table) {
       destroy_buckets(0, num_buckets);
