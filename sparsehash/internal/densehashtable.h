@@ -779,6 +779,12 @@ class dense_hashtable {
     return *this;
   }
 
+  dense_hashtable& operator=(dense_hashtable&& ht) {
+    assert(&ht != this); // this should not happen
+    swap(ht);
+    return *this;
+  }
+
   ~dense_hashtable() {
     if (table) {
       destroy_buckets(0, num_buckets);
