@@ -780,7 +780,7 @@ class dense_hashtable {
   }
 
   dense_hashtable& operator=(dense_hashtable&& ht) {
-    if (&ht == this) return *this;  // don't copy onto ourselves
+    assert(&ht != this); // this should not happen
     swap(ht);
     return *this;
   }
