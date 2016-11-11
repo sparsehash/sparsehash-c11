@@ -123,6 +123,9 @@ class dense_hash_set {
     void operator()(Value* value, const Value& new_key) const {
       *value = new_key;
     }
+    void operator()(Value* value, const Value& new_key, bool) const {
+        new(value) Value(new_key);
+    }
   };
 
   // The actual data
