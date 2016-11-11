@@ -100,6 +100,7 @@
 #include <initializer_list> // for initializer_list
 #include <memory>      // for alloc
 #include <utility>     // for pair<>
+#include <tuple>       // forward_as_tuple
 #include <type_traits> // for enable_if, is_constructible, etc
 #include <sparsehash/internal/densehashtable.h>  // IWYU pragma: export
 #include <sparsehash/internal/libc_allocator_with_realloc.h>
@@ -128,6 +129,9 @@ class dense_hash_map {
       // case it's taking up a lot of memory.  We do this by clearing
       // the value.  This assumes T has a zero-arg constructor!
       value->second = T();
+    }
+    void operator()(std::pair<const Key, T>* value, const Key& new_key, bool) const {
+      new(value) std::pair<const Key, T>(std::piecewise_construct, std::forward_as_tuple(new_key), std::forward_as_tuple());
     }
   };
   // The actual data
