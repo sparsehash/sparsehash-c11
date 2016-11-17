@@ -130,8 +130,9 @@ TEST(DenseHashMapMoveTest, EmplaceHint_SpeedComparison)
 
 struct A
 {
-    A() =default;
-    A(int i) noexcept : _i(i) {}
+    A() { ++ctor; }
+    A(int i) noexcept : _i(i) { ++ctor; }
+    A(float f, int i) noexcept : _i(i) { ++ctor; }
 
     A(const A& a) { _i = a._i; ++copy_ctor;; }
     A& operator=(const A& a) { _i = a._i; ++copy_assign; return *this; }
@@ -141,6 +142,7 @@ struct A
 
     static void reset()
     {
+        ctor = 0;
         copy_ctor = 0;
         copy_assign = 0;
         move_ctor = 0;
@@ -149,16 +151,53 @@ struct A
 
     int _i = 0;
 
+    static int ctor;
     static int copy_ctor;
     static int copy_assign;
     static int move_ctor;
     static int move_assign;
 };
 
+int A::ctor = 0;
 int A::copy_ctor = 0;
 int A::copy_assign = 0;
 int A::move_ctor = 0;
 int A::move_assign = 0;
+
+struct B
+{
+    B() { ++ctor; }
+    B(bool f) noexcept : _f(f) { ++ctor; }
+
+    B(const B& b) : _f(b._f) { ++copy_ctor; }
+    B& operator= (const B& b) { _f = b._f; ++copy_assign; return *this; }
+
+    B(B&& b) : _f(b._f) { ++move_ctor; }
+    B& operator= (B&& b) { _f = b._f; ++move_assign; return *this; }
+
+    static void reset()
+    {
+        ctor = 0;
+        copy_ctor = 0;
+        copy_assign = 0;
+        move_ctor = 0;
+        move_assign = 0;
+    }
+
+    bool _f = false;
+
+    static int ctor;
+    static int copy_ctor;
+    static int copy_assign;
+    static int move_ctor;
+    static int move_assign;
+};
+
+int B::ctor = 0;
+int B::copy_ctor = 0;
+int B::copy_assign = 0;
+int B::move_ctor = 0;
+int B::move_assign = 0;
 
 std::ostream& operator<<(std::ostream& os, const A& a)
 {
@@ -191,6 +230,7 @@ TEST(DenseHashMapMoveTest, MoveConstructor)
     for (auto&& p : h2)
         std::cout << p.first << std::endl;
 
+    ASSERT_EQ(0, A::ctor);
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
     ASSERT_EQ(0, A::move_ctor);
@@ -211,6 +251,7 @@ TEST(DenseHashMapMoveTest, MoveAssignment)
 
     ASSERT_EQ(3, (int)h2.size());
 
+    ASSERT_EQ(0, A::ctor);
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
     ASSERT_EQ(0, A::move_ctor);
@@ -225,6 +266,7 @@ TEST(DenseHashMapMoveTest, InsertRValue_ValueMoveCount)
     A::reset();
     h.insert(std::make_pair(5, A()));
 
+    ASSERT_EQ(1, A::ctor);
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
     ASSERT_EQ(2, A::move_ctor);
@@ -241,6 +283,7 @@ TEST(DenseHashMapMoveTest, InsertMoved_ValueMoveCount)
     A::reset();
     h.insert(std::move(p));
 
+    ASSERT_EQ(0, A::ctor);
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
     ASSERT_EQ(1, A::move_ctor);
@@ -255,6 +298,7 @@ TEST(DenseHashMapMoveTest, Emplace_ValueMoveCount)
     A::reset();
     h.emplace(1, 2);
 
+    ASSERT_EQ(1, A::ctor);
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
     ASSERT_EQ(0, A::move_ctor);
@@ -269,6 +313,7 @@ TEST(DenseHashMapMoveTest, InsertRValue_KeyMoveCount)
     A::reset();
     h.insert(std::make_pair(A(2), 2));
 
+    ASSERT_EQ(1, A::ctor);
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
     ASSERT_EQ(2, A::move_ctor);
@@ -284,6 +329,7 @@ TEST(DenseHashMapMoveTest, InsertMoved_KeyMoveCount)
     A::reset();
     h.insert(std::move(m));
 
+    ASSERT_EQ(0, A::ctor);
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
     ASSERT_EQ(1, A::move_ctor);
@@ -298,10 +344,67 @@ TEST(DenseHashMapMoveTest, Emplace_KeyMoveCount)
     A::reset();
     h.emplace(1, 2);
 
+    ASSERT_EQ(1, A::ctor);
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
-    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(1, A::move_ctor);
     ASSERT_EQ(0, A::move_assign);
+}
+
+TEST(DenseHashMapMoveTest, Emplace_KeyAndValueConsCount)
+{
+    dense_hash_map<A, B, HashA> h;
+    h.set_empty_key(A(0));
+
+    A::reset();
+    B::reset();
+    h.emplace(1, true);
+
+    ASSERT_EQ(1, A::ctor);
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(1, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+
+    ASSERT_EQ(1, B::ctor);
+    ASSERT_EQ(0, B::copy_ctor);
+    ASSERT_EQ(0, B::copy_assign);
+    ASSERT_EQ(0, B::move_ctor);
+    ASSERT_EQ(0, B::move_assign);
+
+    h.clear();
+    A::reset();
+    B::reset();
+    h.emplace(std::make_pair(1, true));
+
+    ASSERT_EQ(1, A::ctor);
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(1, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+
+    ASSERT_EQ(1, B::ctor);
+    ASSERT_EQ(0, B::copy_ctor);
+    ASSERT_EQ(0, B::copy_assign);
+    ASSERT_EQ(0, B::move_ctor);
+    ASSERT_EQ(0, B::move_assign);
+
+    h.clear();
+    A::reset();
+    B::reset();
+    h.emplace(std::piecewise_construct, std::forward_as_tuple(0.5, 1), std::forward_as_tuple(true));
+
+    ASSERT_EQ(1, A::ctor);
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(1, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+
+    ASSERT_EQ(1, B::ctor);
+    ASSERT_EQ(0, B::copy_ctor);
+    ASSERT_EQ(0, B::copy_assign);
+    ASSERT_EQ(0, B::move_ctor);
+    ASSERT_EQ(0, B::move_assign);
 }
 
 TEST(DenseHashMapMoveTest, OperatorSqBck_InsertRValue_KeyMoveCount)
@@ -312,6 +415,7 @@ TEST(DenseHashMapMoveTest, OperatorSqBck_InsertRValue_KeyMoveCount)
     A::reset();
     h[A(1)] = 1;
 
+    ASSERT_EQ(1, A::ctor);
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
     ASSERT_EQ(1, A::move_ctor);
@@ -326,6 +430,7 @@ TEST(DenseHashMapMoveTest, OperatorSqBck_InsertMoved_ValueMoveCount)
     A::reset();
     h[1] = A(1);
 
+    ASSERT_EQ(2, A::ctor);
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
     ASSERT_EQ(1, A::move_ctor);
@@ -451,6 +556,7 @@ TEST(DenseHashSetMoveTest, MoveConstructor)
 
     ASSERT_EQ(Elements, (int)h2.size());
 
+    ASSERT_EQ(2, A::ctor); // empty and deleted
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
     ASSERT_EQ(2, A::move_ctor); // swap() of empty & deleted key
@@ -471,6 +577,7 @@ TEST(DenseHashSetMoveTest, MoveAssignment)
 
     ASSERT_EQ(Elements, (int)h2.size());
 
+    ASSERT_EQ(0, A::ctor);
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
     ASSERT_EQ(2, A::move_ctor); // swap() of empty & deleted key
@@ -485,6 +592,7 @@ TEST(DenseHashSetMoveTest, Insert)
     A::reset();
     h.insert(A(1));
 
+    ASSERT_EQ(1, A::ctor);
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
     ASSERT_EQ(1, A::move_ctor);
@@ -499,8 +607,9 @@ TEST(DenseHashSetMoveTest, Emplace)
     A::reset();
     h.emplace(1);
 
+    ASSERT_EQ(1, A::ctor);
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
-    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(1, A::move_ctor);
     ASSERT_EQ(0, A::move_assign);
 }

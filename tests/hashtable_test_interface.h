@@ -191,6 +191,13 @@ class BaseHashtableInterface {
                          const allocator_type& alloc)
       : ht_(expected_max_items_in_table, hf, eql, ek, sk, alloc) {}
 
+  template <class ExtractKey, class SetKey, class ConstructValue>
+  BaseHashtableInterface(size_type expected_max_items_in_table,
+                         const hasher& hf, const key_equal& eql,
+                         const ExtractKey& ek, const SetKey& sk,
+                         const ConstructValue& cv, const allocator_type& alloc)
+      : ht_(expected_max_items_in_table, hf, eql, ek, sk, cv, alloc) {}
+
   void clear() { ht_.clear(); }
   void swap(BaseHashtableInterface& other) { ht_.swap(other.ht_); }
 
@@ -879,12 +886,12 @@ void swap(HashtableInterface_DenseHashSet<K, Empty, H, E, A>& a,
 // value saying what the empty key is.
 
 template <class Value, class Key, const Key& EMPTY_KEY, class HashFcn,
-          class ExtractKey, class SetKey, class EqualKey, class Alloc>
+          class ExtractKey, class SetKey, class ConstructValue, class EqualKey, class Alloc>
 class HashtableInterface_DenseHashtable
     : public BaseHashtableInterface<dense_hashtable<
-          Value, Key, HashFcn, ExtractKey, SetKey, EqualKey, Alloc> > {
+          Value, Key, HashFcn, ExtractKey, SetKey, ConstructValue, EqualKey, Alloc> > {
  private:
-  typedef dense_hashtable<Value, Key, HashFcn, ExtractKey, SetKey, EqualKey,
+  typedef dense_hashtable<Value, Key, HashFcn, ExtractKey, SetKey, ConstructValue, EqualKey,
                           Alloc> ht;
   typedef BaseHashtableInterface<ht> p;  // parent
 
@@ -895,7 +902,7 @@ class HashtableInterface_DenseHashtable
       const typename p::key_equal& eql = typename p::key_equal(),
       const typename p::allocator_type& alloc = typename p::allocator_type())
       : BaseHashtableInterface<ht>(expected_max_items, hf, eql, ExtractKey(),
-                                   SetKey(), alloc) {
+                                   SetKey(), ConstructValue(), alloc) {
     this->set_empty_key(EMPTY_KEY);
   }
 
@@ -907,7 +914,7 @@ class HashtableInterface_DenseHashtable
       const typename p::key_equal& eql = typename p::key_equal(),
       const typename p::allocator_type& alloc = typename p::allocator_type())
       : BaseHashtableInterface<ht>(expected_max_items, hf, eql, ExtractKey(),
-                                   SetKey(), alloc) {
+                                   SetKey(), ConstructValue(), alloc) {
     this->set_empty_key(EMPTY_KEY);
     this->insert(f, l);
   }
@@ -985,11 +992,11 @@ class HashtableInterface_DenseHashtable
 
  protected:
   template <class V2, class K2, const K2& Empty2, class HF2, class EK2,
-            class SK2, class Eq2, class A2>
+            class SK2, class CV2, class Eq2, class A2>
   friend void swap(HashtableInterface_DenseHashtable<V2, K2, Empty2, HF2, EK2,
-                                                     SK2, Eq2, A2>& a,
+                                                     SK2, CV2, Eq2, A2>& a,
                    HashtableInterface_DenseHashtable<V2, K2, Empty2, HF2, EK2,
-                                                     SK2, Eq2, A2>& b);
+                                                     SK2, CV2, Eq2, A2>& b);
 
   typename p::key_type it_to_key(const typename p::iterator& it) const {
     return extract_key(*it);
@@ -1010,10 +1017,10 @@ class HashtableInterface_DenseHashtable
 };
 
 template <class V, class K, const K& Empty, class HF, class EK, class SK,
-          class Eq, class A>
+          class CV, class Eq, class A>
 void swap(
-    HashtableInterface_DenseHashtable<V, K, Empty, HF, EK, SK, Eq, A>& a,
-    HashtableInterface_DenseHashtable<V, K, Empty, HF, EK, SK, Eq, A>& b) {
+    HashtableInterface_DenseHashtable<V, K, Empty, HF, EK, SK, CV, Eq, A>& a,
+    HashtableInterface_DenseHashtable<V, K, Empty, HF, EK, SK, CV, Eq, A>& b) {
   swap(a.ht_, b.ht_);
 }
 

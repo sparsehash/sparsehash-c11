@@ -45,6 +45,8 @@
 #include <iosfwd>
 #include <stdexcept>  // For length_error
 
+#include "index_seq.h"
+
 namespace google {
 namespace sparsehash_internal {
 // Adaptor methods for reading/writing data from an INPUT or OUPTUT
@@ -334,6 +336,16 @@ class sh_hashtable_settings : public HashFunc {
   // num_ht_copies is a counter incremented every Copy/Move
   unsigned int num_ht_copies_;
 };
+
+template <class C, class Tuple, size_t... Is>
+inline C invoke_cons_impl(Tuple&& tuple, redi::index_sequence<Is...>) {
+    return C(std::get<Is>(tuple)...);
+}
+
+template <class C, class... Args>
+inline C invoke_cons(const std::tuple<Args...>& tuple) {
+    return invoke_cons_impl<C>(tuple, redi::index_sequence_for<Args...>{});
+}
 
 }  // namespace sparsehash_internal
 }  // namespace google
