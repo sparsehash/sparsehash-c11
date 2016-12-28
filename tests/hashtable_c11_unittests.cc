@@ -23,6 +23,7 @@ TEST(DenseHashMapMoveTest, Insert_RValue)
 {
     dense_hash_map<int, std::unique_ptr<int>> h;
     h.set_empty_key(0);
+    h.set_deleted_key(-1);
 
     auto p1 = std::make_pair(5, make_unique<int>(1234));
     auto p = h.insert(std::move(p1));
@@ -42,6 +43,7 @@ TEST(DenseHashMapMoveTest, Emplace)
 {
     dense_hash_map<int, std::unique_ptr<int>> h;
     h.set_empty_key(0);
+    h.set_deleted_key(-1);
 
     auto p = h.emplace(5, make_unique<int>(1234));
     ASSERT_EQ(true, p.second);

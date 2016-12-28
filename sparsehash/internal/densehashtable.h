@@ -375,7 +375,9 @@ class dense_hashtable {
  private:
   void squash_deleted() {          // gets rid of any deleted entries we have
     if (num_deleted) {             // get rid of deleted before writing
-      dense_hashtable tmp(*this);  // copying will get rid of deleted
+      size_type resize_to = settings.min_buckets(
+          num_elements, bucket_count());
+      dense_hashtable tmp(std::move(*this), resize_to);  // copying will get rid of deleted
       swap(tmp);                   // now we are tmp
     }
     assert(num_deleted == 0);
