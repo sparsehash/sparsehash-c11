@@ -86,6 +86,17 @@ struct SetKey {
   }
 };
 
+template <class Key, class Value>
+struct TrivialCV {
+  template <class Arg, class... Args>
+  void operator()(void* dst, const Key&, Arg&& arg, Args&& ...args) const {
+    new (dst) Value(std::forward<Arg>(arg), std::forward<Args>(args)...);
+  }
+  void operator()(void* dst, const Value& v) const {
+    new (dst) Value(v);
+  }
+};
+
 // A hash function that keeps track of how often it's called.  We use
 // a simple djb-hash so we don't depend on how STL hashes.  We use
 // this same method to do the key-comparison, so we can keep track
@@ -283,7 +294,7 @@ extern const char* const kDeletedCharStar;
                                       Alloc<int>>,                           \
       HashtableInterface_DenseHashtable<                                     \
           int, int, kEmptyInt, Hasher, Negation<int>,                        \
-          SetKey<int, Negation<int>>, Hasher, Alloc<int>>
+          SetKey<int, Negation<int>>, TrivialCV<int, int>, Hasher, Alloc<int>>
 
 // Third table has key associated with a value of Cap(value)
 #define STRING_HASHTABLES                                                      \
@@ -299,7 +310,8 @@ extern const char* const kDeletedCharStar;
                                       Alloc<string>>,                          \
       HashtableInterface_DenseHashtable<string, string, kEmptyString, Hasher,  \
                                         Capital, SetKey<string, Capital>,      \
-                                        Hasher, Alloc<string>>
+                                        TrivialCV<string, string>, Hasher,     \
+                                        Alloc<string>>
 
 // I'd like to use ValueType keys for SparseHashtable<> and
 // DenseHashtable<> but I can't due to memory-management woes (nobody
@@ -319,7 +331,8 @@ extern const char* const kDeletedCharStar;
                                       Hasher, Alloc<const char*>>,            \
       HashtableInterface_DenseHashtable<                                      \
           const char*, const char*, kEmptyCharStar, Hasher, Identity,         \
-          SetKey<const char*, Identity>, Hasher, Alloc<ValueType>>
+          SetKey<const char*, Identity>, TrivialCV<const char*, const char*>, \
+          Hasher, Alloc<ValueType>>
 
 // This is the list of types we run each test against.
 // We need to define the same class 4 times due to limitations in the

@@ -113,11 +113,23 @@ template <class Value, class HashFcn = std::hash<Value>,
           class Alloc = libc_allocator_with_realloc<Value>>
 class dense_hash_set {
  private:
-  // Apparently identity is not stl-standard, so we define our own
-  struct Identity {
-    typedef const Value& result_type;
-    template <typename V>
-    const Value& operator()(V&& v) const { return v; }
+  // key extraction and value construction are trivial -
+  // we are just forwarding arguments to relevant constructors
+  // or to a caller
+  struct ExtractKey {
+    const Value& operator()(const Value& v) const { return v; }
+    const Value& operator()(Value& v) const { return v; }
+    Value&& operator()(Value&& v) const { return std::move(v); }
+    template <typename... Args>
+    Value operator()(Args&& ...args) const {
+      return Value(std::forward<Args>(args)...);
+    }
+  };
+  struct ConstructValue {
+    template <typename V, typename... Args>
+    void operator()(void* dst, V&& v, Args&&...) const {
+      new (dst) Value(std::forward<V>(v));
+    }
   };
   struct SetKey {
     void operator()(Value* value, const Value& new_key) const {
@@ -126,7 +138,7 @@ class dense_hash_set {
   };
 
   // The actual data
-  typedef dense_hashtable<Value, Value, HashFcn, Identity, SetKey, EqualKey,
+  typedef dense_hashtable<Value, Value, HashFcn, ExtractKey, SetKey, ConstructValue, EqualKey,
                           Alloc> ht;
   ht rep;
 
@@ -170,7 +182,7 @@ class dense_hash_set {
                           const hasher& hf = hasher(),
                           const key_equal& eql = key_equal(),
                           const allocator_type& alloc = allocator_type())
-      : rep(expected_max_items_in_table, hf, eql, Identity(), SetKey(), alloc) {
+      : rep(expected_max_items_in_table, hf, eql, ExtractKey(), SetKey(), ConstructValue(), alloc) {
   }
 
   template <class InputIterator>
@@ -180,7 +192,7 @@ class dense_hash_set {
                  const hasher& hf = hasher(),
                  const key_equal& eql = key_equal(),
                  const allocator_type& alloc = allocator_type())
-      : rep(expected_max_items_in_table, hf, eql, Identity(), SetKey(), alloc) {
+      : rep(expected_max_items_in_table, hf, eql, ExtractKey(), SetKey(), ConstructValue(), alloc) {
     set_empty_key(empty_key_val);
     rep.insert(f, l);
   }

@@ -110,12 +110,105 @@ template <class Key, class T, class HashFcn = std::hash<Key>,
           class Alloc = libc_allocator_with_realloc<std::pair<const Key, T>>>
 class dense_hash_map {
  private:
-  // Apparently select1st is not stl-standard, so we define our own
-  struct SelectKey {
-    typedef const Key& result_type;
-    template <typename Pair>
-    const Key& operator()(Pair&& p) const {
-      return p.first;
+  typedef std::pair<const Key, T> ValueT;
+  // Before we do something with a Value, we need to compute
+  // its hash. So even if an user wants an in-place construction,
+  // we have to construct a Key before we could fully construct
+  // a Value.
+  //
+  // Key extraction is straightforward for cases when we
+  // deal with values (internally) or with insertions -
+  // key is already constructed and we need to simply forward
+  // a reference to it.
+  // In case of emplace, key may be or may be not constructed.
+  // If it's already constructed, we need to carefully forward
+  // a reference to it, but if it's not constructed, we have no
+  // choice but to construct it and return by value. Caller is
+  // ready for it.
+  struct ExtractKey {
+    // Implementation type tagging and result type deduction.
+    // If we have a Key, then result is a const reference to it,
+    // it will be used for hash computing.
+    // If we have to construct a Key, then result is a value,
+    // caller will carefully forward it to ConstructValue
+    template <class U>
+    using is_key = std::is_same<Key, typename std::decay<U>::type>;
+    template <bool v>
+    using bool_t = std::integral_constant<bool, v>;
+    template <class U>
+    using direct_tag = bool_t<is_key<U>::value>;
+    template <class U>
+    using return_type = typename std::conditional<
+        is_key<U>::value,
+        const Key&,
+        Key>::type;
+
+    template <class U1, class U2>
+    return_type<U1> operator()(U1&& first, U2&&) const { return get_impl(std::forward<U1>(first), direct_tag<U1>{}); }
+    template <class U1, class U2>
+    return_type<U1> operator()(const std::pair<U1, U2>& p) const { return get_impl(p.first, direct_tag<U1>{}); }
+    template <class U1, class U2>
+    return_type<U1> operator()(std::pair<U1, U2>&& p) const { return get_impl(std::move(p.first), direct_tag<U1>{}); }
+    template <class KArg, class... VArgs>
+    return_type<KArg> operator()(std::piecewise_construct_t, std::tuple<KArg> key_arg, std::tuple<VArgs...>) const {
+        return get_impl(std::get<0>(key_arg), direct_tag<KArg>{});
+    }
+    template <class... KArgs, class... VArgs>
+    Key operator()(std::piecewise_construct_t, std::tuple<KArgs...> key_args, std::tuple<VArgs...>) const {
+        return sparsehash_internal::invoke_cons<Key>(key_args);
+    }
+  private:
+    const Key& get_impl(const Key& key, bool_t<true>) const { return key; }
+    template <class U>
+    Key get_impl(U&& arg, bool_t<false>) const { return Key(std::forward<U>(arg)); }
+  };
+  // Value (value_type) construction is splitted into 3 cases:
+  // 1) we need to move or copy a Value - just do that.
+  // 2) we have a const reference to a Key, meaning it's either
+  //    cannot be moved, or it's r-value reference is inside
+  //    the rest of the arguments; and the rest of the arguments
+  //    is enough to construct a Value, so we forward them to
+  //    Value's constructor.
+  // 3) we have a r-value reference to a Key, meaning it was
+  //    constructed for purposes of hash computing and we need to
+  //    move it into a Value we construct here, while extracting
+  //    from the rest of the arguments the part, relevant to
+  //    payload construction - we want to call as less constructors
+  //    as possible.
+  struct ConstructValue {
+    // 1st case - we are dealing with a Value here
+    template <typename V, typename = typename std::enable_if<std::is_same<ValueT, typename std::decay<V>::type>::value>::type>
+    void operator()(void* dst, V&& v) const {
+      new (dst) ValueT(std::forward<V>(v));
+    }
+    // 2nd case - we are just forwarding the rest of the arguments
+    template <typename... Args>
+    void operator()(void* dst, const Key&, Args&& ...args) const {
+      new (dst) ValueT(std::forward<Args>(args)...);
+    }
+    // 3rd case - we are forwarding r-value reference to a Key and
+    // extracting payload constructor's arguments.
+    // We can do that because Map's emplace method accepts the same arguments
+    // as value_type constructor - std::pair<const Key, T>(...).
+    template <class U1, class U2, class = typename std::enable_if<std::is_convertible<U2, T>::value>::type>
+    void operator()(void* dst, Key&& key, U1&&, U2&& second) const {
+      new (dst) ValueT(std::move(key), std::forward<U2>(second));
+    }
+    template <class U1, class U2>
+    void operator()(void* dst, Key&& key, const std::pair<U1, U2>& p) const {
+      new (dst) ValueT(std::move(key), p.second);
+    }
+    template <class U1, class U2>
+    void operator()(void* dst, Key&& key, std::pair<U1, U2>& p) const {
+      new (dst) ValueT(std::move(key), p.second);
+    }
+    template <class U1, class U2>
+    void operator()(void* dst, Key&& key, std::pair<U1, U2>&& p) const {
+      new (dst) ValueT(std::move(key), std::move(p.second));
+    }
+    template <class... FirstArgs, class... SecondArgs>
+    void operator()(void* dst, Key&& key, std::piecewise_construct_t, std::tuple<FirstArgs...>, std::tuple<SecondArgs...> second) const {
+      new (dst) ValueT(std::piecewise_construct, std::forward_as_tuple(std::move(key)), std::move(second));
     }
   };
   struct SetKey {
@@ -130,8 +223,8 @@ class dense_hash_map {
     }
   };
   // The actual data
-  typedef dense_hashtable<std::pair<const Key, T>, Key, HashFcn, SelectKey,
-                          SetKey, EqualKey, Alloc> ht;
+  typedef dense_hashtable<std::pair<const Key, T>, Key, HashFcn, ExtractKey,
+                          SetKey, ConstructValue, EqualKey, Alloc> ht;
   ht rep;
 
  public:
@@ -180,8 +273,8 @@ class dense_hash_map {
                           const hasher& hf = hasher(),
                           const key_equal& eql = key_equal(),
                           const allocator_type& alloc = allocator_type())
-      : rep(expected_max_items_in_table, hf, eql, SelectKey(), SetKey(),
-            alloc) {}
+      : rep(expected_max_items_in_table, hf, eql, ExtractKey(), SetKey(),
+            ConstructValue(), alloc) {}
 
   template <class InputIterator>
   dense_hash_map(InputIterator f, InputIterator l,
@@ -190,8 +283,8 @@ class dense_hash_map {
                  const hasher& hf = hasher(),
                  const key_equal& eql = key_equal(),
                  const allocator_type& alloc = allocator_type())
-      : rep(expected_max_items_in_table, hf, eql, SelectKey(), SetKey(),
-            alloc) {
+      : rep(expected_max_items_in_table, hf, eql, ExtractKey(), SetKey(),
+            ConstructValue(), alloc) {
     set_empty_key(empty_key_val);
     rep.insert(f, l);
   }
