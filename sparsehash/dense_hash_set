@@ -159,6 +159,8 @@ class dense_hash_set {
   // These come from tr1's unordered_set. For us, a bucket has 0 or 1 elements.
   local_iterator begin(size_type i) const { return rep.begin(i); }
   local_iterator end(size_type i) const { return rep.end(i); }
+  local_iterator cbegin(size_type i) const { return rep.begin(i); }
+  local_iterator cend(size_type i) const { return rep.end(i); }
 
   // Accessor functions
   allocator_type get_allocator() const { return rep.get_allocator(); }
