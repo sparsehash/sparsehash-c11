@@ -97,6 +97,7 @@
 
 #include <algorithm>   // needed by stl_alloc
 #include <functional>  // for equal_to<>, select1st<>, etc
+#include <initializer_list> // for initializer_list
 #include <memory>      // for alloc
 #include <utility>     // for pair<>
 #include <type_traits> // for enable_if, is_constructible, etc
@@ -301,6 +302,7 @@ class dense_hash_map {
     rep.insert(f, l);
   }
   void insert(const_iterator f, const_iterator l) { rep.insert(f, l); }
+  void insert(std::initializer_list<value_type> ilist) { rep.insert(ilist.begin(), ilist.end()); }
   // Required for std::insert_iterator; the passed-in iterator is ignored.
   iterator insert(iterator, const value_type& obj) { return insert(obj).first; }
 

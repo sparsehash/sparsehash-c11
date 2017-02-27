@@ -504,3 +504,40 @@ TEST(DenseHashSetMoveTest, Emplace)
     ASSERT_EQ(0, A::move_ctor);
     ASSERT_EQ(0, A::move_assign);
 }
+
+TEST(DenseHashSetIfaceTest, Insert)
+{
+    dense_hash_set<int> h;
+    h.set_empty_key(0);
+
+    const int k1 = 10;
+    int k2 = 20;
+    std::vector<int> v { 5, 15, 25, 35 };
+
+    EXPECT_TRUE(h.insert(k1).second);
+    EXPECT_TRUE(h.insert(k2).second);
+    h.insert(h.begin(), 2);
+    h.insert(h.begin(), std::move(3));
+    h.insert(v.begin(), v.end());
+    h.insert({11, 21, 31});
+    EXPECT_EQ(11, h.size());
+}
+
+TEST(DenseHashMapIfaceTest, Insert)
+{
+    dense_hash_map<int, int> h;
+    h.set_empty_key(0);
+
+    const std::pair<const int, int> k1 { 10, 100 };
+    std::pair<const int, int> k2 { 20, 200 };
+    const std::pair<const int, int> k3 { 30, 300 };
+    std::vector<std::pair<const int, int>> v { {5, 50}, {15, 150} };
+
+    EXPECT_TRUE(h.insert(k1).second);
+    EXPECT_TRUE(h.insert(k2).second);
+    h.insert(h.begin(), k3);
+    h.insert(h.begin(), std::pair<const int, int>{2, 20});
+    h.insert(v.begin(), v.end());
+    h.insert({{11, 110}, {21, 210}, {31, 310}});
+    EXPECT_EQ(9, h.size());
+}
