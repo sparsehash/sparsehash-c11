@@ -304,7 +304,13 @@ class dense_hash_map {
   void insert(const_iterator f, const_iterator l) { rep.insert(f, l); }
   void insert(std::initializer_list<value_type> ilist) { rep.insert(ilist.begin(), ilist.end()); }
   // Required for std::insert_iterator; the passed-in iterator is ignored.
-  iterator insert(iterator, const value_type& obj) { return insert(obj).first; }
+  iterator insert(const_iterator, const value_type& obj) { return insert(obj).first; }
+  iterator insert(const_iterator, value_type&& obj) { return insert(std::move(obj)).first; }
+  template <class P, class = typename std::enable_if<
+                                        std::is_constructible<value_type, P&&>::value &&
+                                        !std::is_same<value_type, P>::value
+                                      >::type>
+  iterator insert(const_iterator, P&& obj) { return insert(std::forward<P>(obj)).first; }
 
   // Deletion and empty routines
   // THESE ARE NON-STANDARD!  I make you specify an "impossible" key

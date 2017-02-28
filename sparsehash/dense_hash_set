@@ -272,7 +272,8 @@ class dense_hash_set {
   void insert(const_iterator f, const_iterator l) { rep.insert(f, l); }
   void insert(std::initializer_list<value_type> ilist) { rep.insert(ilist.begin(), ilist.end()); }
   // Required for std::insert_iterator; the passed-in iterator is ignored.
-  iterator insert(iterator, const value_type& obj) { return insert(obj).first; }
+  iterator insert(const_iterator, const value_type& obj) { return insert(obj).first; }
+  iterator insert(const_iterator, value_type&& obj) { return insert(std::move(obj)).first; }
 
   // Deletion and empty routines
   // THESE ARE NON-STANDARD!  I make you specify an "impossible" key
