@@ -40,10 +40,20 @@ namespace google {
 // struct is_relocatable<MyType> : std::true_type {};
 // }
 
+// Work around lack of std::is_trivially_copy_constructible in gcc 4.x by
+// aliasing it to has_trivial_copy_constructor in those versions.
+#if ! __clang__ && __GNUC__ < 5
+template<class T>
+using is_trivially_copy_constructible = std::has_trivial_copy_constructor<T>;
+#else
+template<typename T>
+using is_trivially_copy_constructible = std::is_trivially_copy_constructible<T>;
+#endif
+
 template <class T>
 struct is_relocatable
     : std::integral_constant<bool,
-                             (std::is_trivially_copy_constructible<T>::value &&
+                             (is_trivially_copy_constructible<T>::value &&
                               std::is_trivially_destructible<T>::value)> {};
 template <class T, class U>
 struct is_relocatable<std::pair<T, U>>
