@@ -1021,12 +1021,30 @@ class dense_hashtable {
     return insert_noresize(std::forward<K>(key), std::forward<K>(key), std::forward<Args>(args)...);
   }
 
-  template <typename K, typename... Args>
-  std::pair<iterator, bool> emplace_hint(const_iterator hint, K&& key, Args&&... args) {
+  /* Overload for maps: Here, K != V, and we need to pass hint->first to the equal() function. */
+  template <typename K, typename... Args, typename KeyCopy = Key>
+  typename std::enable_if<!std::is_same<KeyCopy, Value>::value,
+                          std::pair<iterator, bool>>::type
+  emplace_hint(const_iterator hint, K&& key, Args&&... args) {
     resize_delta(1);
 
     if (equals(key, hint->first)) {
         return {iterator(this, const_cast<pointer>(hint.pos), const_cast<pointer>(hint.end), false), false};
+    }
+
+    // here we push key twice as we need it once for the indexing, and the rest of the params are for the emplace itself
+    return insert_noresize(std::forward<K>(key), std::forward<K>(key), std::forward<Args>(args)...);
+  }
+
+  /* Overload for sets: Here, K == V, and we need to pass *hint to the equal() function. */
+  template <typename K, typename... Args, typename KeyCopy = Key>
+  typename std::enable_if<std::is_same<KeyCopy, Value>::value,
+                          std::pair<iterator, bool>>::type
+  emplace_hint(const_iterator hint, K&& key, Args&&... args) {
+    resize_delta(1);
+
+    if (equals(key, *hint)) {
+      return {iterator(this, const_cast<pointer>(hint.pos), const_cast<pointer>(hint.end), false), false};
     }
 
     // here we push key twice as we need it once for the indexing, and the rest of the params are for the emplace itself
