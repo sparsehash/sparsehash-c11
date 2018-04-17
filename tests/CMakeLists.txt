@@ -9,7 +9,9 @@ add_executable(sparsehash_unittests
     hashtable_unittests.cc
     hashtable_c11_unittests.cc
     fixture_unittests.cc
-    allocator_unittests.cc)
+    allocator_unittests.cc
+    dense_hash_set_unittests.cc
+    dense_hash_map_unittests.cc)
 
 add_executable(bench bench.cc)
 
