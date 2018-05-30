@@ -83,6 +83,7 @@ TEST(DenseHashMapMoveTest, EmplaceHint)
     ASSERT_EQ(6, (int)h.size());
 }
 
+#ifndef _SPARSEHASH_CI_TESTING_ // CI and speed tests don't mix
 TEST(DenseHashMapMoveTest, EmplaceHint_SpeedComparison)
 {
     static const int Elements = 1e6;
@@ -129,6 +130,7 @@ TEST(DenseHashMapMoveTest, EmplaceHint_SpeedComparison)
 
     ASSERT_LE(emplace_hint_time, emplace_time);
 }
+#endif  // _SPARSEHASH_CI_TESTING_
 
 struct A
 {

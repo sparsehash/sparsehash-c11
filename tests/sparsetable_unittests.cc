@@ -268,7 +268,7 @@ TEST(Sparsetable, Int) {
     std::vector<unsigned int> v;
     for (auto it = constant(gp).nonempty_begin();
          it != constant(gp).nonempty_end(); ++it)
-      v.emplace_back(gp.get_pos(it));
+      v.emplace_back(static_cast<unsigned int>(gp.get_pos(it)));
 
     ASSERT_THAT(
         v, ElementsAreArray({0, 9, 18, 27, 36, 45, 54, 63, 72, 81, 90, 99}));
@@ -277,7 +277,7 @@ TEST(Sparsetable, Int) {
   {
     std::vector<unsigned int> v;
     for (auto it = gp.nonempty_begin(); it != gp.nonempty_end(); ++it)
-      v.emplace_back(gp.get_pos(it));
+      v.emplace_back(static_cast<unsigned int>(gp.get_pos(it)));
     ASSERT_THAT(
         v, ElementsAreArray({0, 9, 18, 27, 36, 45, 54, 63, 72, 81, 90, 99}));
   }
@@ -329,7 +329,7 @@ TEST(Sparsetable, Int) {
   {
     std::vector<unsigned int> v;
     for (auto it = constant(y).begin(); it != constant(y).end(); ++it) {
-      if (y.test(it)) v.emplace_back(it - y.begin());
+      if (y.test(it)) v.emplace_back(static_cast<unsigned int>(it - y.begin()));
     }
     ASSERT_THAT(v, ElementsAreArray(
                        {10, 11, 13, 14, 30, 31, 32, 33, 35, 36, 37, 9898}));
