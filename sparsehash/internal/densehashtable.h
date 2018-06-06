@@ -1028,7 +1028,7 @@ class dense_hashtable {
   emplace_hint(const_iterator hint, K&& key, Args&&... args) {
     resize_delta(1);
 
-    if (equals(key, hint->first)) {
+    if ((hint != this->end()) && (equals(key, hint->first))) {
         return {iterator(this, const_cast<pointer>(hint.pos), const_cast<pointer>(hint.end), false), false};
     }
 
@@ -1043,7 +1043,7 @@ class dense_hashtable {
   emplace_hint(const_iterator hint, K&& key, Args&&... args) {
     resize_delta(1);
 
-    if (equals(key, *hint)) {
+    if ((hint != this->end()) && (equals(key, *hint))) {
       return {iterator(this, const_cast<pointer>(hint.pos), const_cast<pointer>(hint.end), false), false};
     }
 
