@@ -9,6 +9,7 @@ using google::dense_hash_map;
 
 TEST(DenseHashMap, TestEmplaceHint) {
 	dense_hash_map<int, const char *> map;
+	map.set_empty_key(0);
 
 	const char * str1 = "Hello";
 
