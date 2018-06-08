@@ -891,6 +891,9 @@ TEST(HashtableTest, InsertValueToMap) {
   EXPECT_EQ(2, shm_it.first->first);
   EXPECT_EQ(4, shm_it.first->second);
   EXPECT_EQ(4, shm[2]);
+  EXPECT_EQ(4, shm.at(2));
+  shm.at(2) = 101;
+  EXPECT_EQ(101, shm[2]);
 
   // Do it all again, with dense_hash_map.
   dense_hash_map<int, int> dhm;
@@ -909,6 +912,31 @@ TEST(HashtableTest, InsertValueToMap) {
   EXPECT_EQ(2, dhm_it.first->first);
   EXPECT_EQ(4, dhm_it.first->second);
   EXPECT_EQ(4, dhm[2]);
+  EXPECT_EQ(4, dhm.at(2));
+  dhm.at(2) = 101;
+  EXPECT_EQ(101, dhm[2]);
+}
+
+TEST(HashtableTest, BadAt) {
+  sparse_hash_map<int, int> shm;
+  shm[1] = 2;
+  EXPECT_EQ(2, shm.at(1));
+  try {
+      int a = shm.at(3);
+      FAIL() << "expected exception here";
+  } catch (const std::out_of_range&) {
+  }
+
+  // Do it all again, with dense_hash_map.
+  dense_hash_map<int, int> dhm;
+  dhm.set_empty_key(0);
+  dhm[1] = 2;
+  EXPECT_EQ(2, dhm.at(1));
+  try {
+      int a = dhm.at(3);
+      FAIL() << "expected exception here";
+  } catch (const std::out_of_range&) {
+  }
 }
 
 TYPED_TEST(HashtableStringTest, EmptyKey) {

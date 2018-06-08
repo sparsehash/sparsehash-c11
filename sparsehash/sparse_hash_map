@@ -86,6 +86,7 @@
 #include <algorithm>   // needed by stl_alloc
 #include <functional>  // for equal_to<>, select1st<>, etc
 #include <memory>      // for alloc
+#include <stdexcept>   // for out_of_range
 #include <utility>     // for pair<>
 #include <sparsehash/internal/libc_allocator_with_realloc.h>
 #include <sparsehash/internal/sparsehashtable.h>  // IWYU pragma: export
@@ -238,6 +239,23 @@ class sparse_hash_map {
     // otherwise returns insert(value_type(key, T()).first->second.
     // Note it does not create an empty T unless the find fails.
     return rep.template find_or_insert<DefaultValue>(key).second;
+  }
+
+  data_type& at(const key_type& key) {
+    auto it = rep.find(key);
+    if (it != rep.end()) {
+      return it->second;
+    } else {
+      throw std::out_of_range("no such key in map");
+    }
+  }
+  const data_type& at(const key_type& key) const {
+    auto it = rep.find(key);
+    if (it != rep.end()) {
+      return it->second;
+    } else {
+      throw std::out_of_range("no such key in map");
+    }
   }
 
   size_type count(const key_type& key) const { return rep.count(key); }
