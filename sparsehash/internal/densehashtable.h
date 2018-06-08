@@ -375,7 +375,9 @@ class dense_hashtable {
  private:
   void squash_deleted() {          // gets rid of any deleted entries we have
     if (num_deleted) {             // get rid of deleted before writing
-      dense_hashtable tmp(*this);  // copying will get rid of deleted
+      size_type resize_to = settings.min_buckets(
+          num_elements, bucket_count());
+      dense_hashtable tmp(std::move(*this), resize_to);  // copying will get rid of deleted
       swap(tmp);                   // now we are tmp
     }
     assert(num_deleted == 0);
@@ -493,8 +495,7 @@ class dense_hashtable {
   void fill_range_with_empty(pointer table_start, size_type count) {
     for (size_type i = 0; i < count; ++i)
     {
-      new(&table_start[i]) value_type();
-      set_key(&table_start[i], key_info.empty_key);
+      construct_key(&table_start[i], key_info.empty_key);
     }
   }
 
@@ -1283,6 +1284,9 @@ class dense_hashtable {
     void set_key(pointer v, const key_type& k) const {
       SetKey::operator()(v, k);
     }
+    void construct_key(pointer v, const key_type& k) const {
+      SetKey::operator()(v, k, true);
+    }
     bool equals(const key_type& a, const key_type& b) const {
       return EqualKey::operator()(a, b);
     }
@@ -1303,6 +1307,7 @@ class dense_hashtable {
     return key_info.get_key(std::forward<V>(v));
   }
   void set_key(pointer v, const key_type& k) const { key_info.set_key(v, k); }
+  void construct_key(pointer v, const key_type& k) const { key_info.construct_key(v, k); }
 
  private:
   // Actual data

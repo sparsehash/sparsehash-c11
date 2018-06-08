@@ -84,6 +84,10 @@ struct SetKey {
   void operator()(KeyAndValueT* value, const KeyAndValueT& new_key) const {
     *value = KeyToValue()(new_key);
   }
+  void operator()(KeyAndValueT* value, const KeyAndValueT& new_key, bool) const {
+    new (value) KeyAndValueT();
+    *value = KeyToValue()(new_key);
+  }
 };
 
 // A hash function that keeps track of how often it's called.  We use

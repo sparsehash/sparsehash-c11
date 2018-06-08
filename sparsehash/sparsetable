@@ -303,6 +303,7 @@ class table_iterator {
   typedef typename tabletype::size_type size_type;
   typedef table_element_adaptor<tabletype> reference;
   typedef table_element_adaptor<tabletype>* pointer;
+  typedef typename tabletype::const_reference const_reference;  // we're const-only
 
   // The "real" constructor
   table_iterator(tabletype* tbl, size_type p) : table(tbl), pos(p) {}
@@ -316,6 +317,7 @@ class table_iterator {
   // we point to is empty, we return the default value type.
   // This is the big different function from the const iterator.
   reference operator*() { return table_element_adaptor<tabletype>(table, pos); }
+  const_reference operator*() const { return table_element_adaptor<tabletype>(table, pos); }
   pointer operator->() { return &(operator*()); }
 
   // Helper function to assert things are ok; eg pos is still in range

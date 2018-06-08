@@ -23,6 +23,7 @@ TEST(DenseHashMapMoveTest, Insert_RValue)
 {
     dense_hash_map<int, std::unique_ptr<int>> h;
     h.set_empty_key(0);
+    h.set_deleted_key(-1);
 
     auto p1 = std::make_pair(5, make_unique<int>(1234));
     auto p = h.insert(std::move(p1));
@@ -42,6 +43,7 @@ TEST(DenseHashMapMoveTest, Emplace)
 {
     dense_hash_map<int, std::unique_ptr<int>> h;
     h.set_empty_key(0);
+    h.set_deleted_key(-1);
 
     auto p = h.emplace(5, make_unique<int>(1234));
     ASSERT_EQ(true, p.second);
@@ -81,6 +83,7 @@ TEST(DenseHashMapMoveTest, EmplaceHint)
     ASSERT_EQ(6, (int)h.size());
 }
 
+#ifndef _SPARSEHASH_CI_TESTING_ // CI and speed tests don't mix
 TEST(DenseHashMapMoveTest, EmplaceHint_SpeedComparison)
 {
     static const int Elements = 1e6;
@@ -127,6 +130,7 @@ TEST(DenseHashMapMoveTest, EmplaceHint_SpeedComparison)
 
     ASSERT_LE(emplace_hint_time, emplace_time);
 }
+#endif  // _SPARSEHASH_CI_TESTING_
 
 struct A
 {
@@ -437,6 +441,66 @@ TEST(DenseHashMapMoveTest, CBeginCEnd)
     ASSERT_TRUE(end == h.cend());
 }
 
+TEST(DenseHashSetIfaceTest, BucketBeginEnd)
+{
+    dense_hash_set<int> h;
+    h.set_empty_key(0);
+    h.set_deleted_key(-1);
+
+    EXPECT_TRUE(h.begin(0) == h.end(0)) << "empty set";
+    EXPECT_TRUE(h.begin(10) == h.end(10)) << "empty set";
+    EXPECT_TRUE(h.cbegin(0) == h.cend(0)) << "empty set";
+    EXPECT_TRUE(h.cbegin(10) == h.cend(10)) << "empty set";
+
+    h.insert(1);
+    const auto n1 = h.bucket(1);
+    EXPECT_FALSE(h.begin(n1) == h.end(n1)) << "singleton set";
+    EXPECT_EQ(1, std::distance(h.begin(n1), h.end(n1))) << "singleton set";
+    EXPECT_FALSE(h.cbegin(n1) == h.cend(n1)) << "singleton set";
+    EXPECT_EQ(1, *h.cbegin(n1)) << "singleton set";
+
+    h.insert(2);
+    const auto n2 = h.bucket(2);
+    EXPECT_FALSE(h.begin(n1) == h.end(n1)) << "two elements set";
+    EXPECT_EQ(1, std::distance(h.begin(n1), h.end(n1))) << "two elements set";
+    EXPECT_FALSE(h.begin(n2) == h.end(n2)) << "two elements set";
+    EXPECT_EQ(1, std::distance(h.begin(n2), h.end(n2))) << "two elements set";
+    EXPECT_EQ(1, std::distance(h.cbegin(n1), h.cend(n1))) << "two elements set";
+    EXPECT_EQ(1, std::distance(h.cbegin(n2), h.cend(n2))) << "two elements set";
+    EXPECT_EQ(1, *h.cbegin(n1)) << "two elements set";
+    EXPECT_EQ(2, *h.cbegin(n2)) << "two elements set";
+}
+
+TEST(DenseHashMapIfaceTest, BucketBeginEnd)
+{
+    dense_hash_map<int, int> h;
+    h.set_empty_key(0);
+    h.set_deleted_key(-1);
+
+    EXPECT_TRUE(h.begin(0) == h.end(0)) << "empty map";
+    EXPECT_TRUE(h.begin(10) == h.end(10)) << "empty map";
+    EXPECT_TRUE(h.cbegin(0) == h.cend(0)) << "empty map";
+    EXPECT_TRUE(h.cbegin(10) == h.cend(10)) << "empty map";
+
+    h.emplace(1, 10);
+    const auto n1 = h.bucket(1);
+    EXPECT_FALSE(h.begin(n1) == h.end(n1)) << "singleton map";
+    EXPECT_EQ(1, std::distance(h.begin(n1), h.end(n1))) << "singleton map";
+    EXPECT_FALSE(h.cbegin(n1) == h.cend(n1)) << "singleton map";
+    EXPECT_EQ(10, h.cbegin(n1)->second) << "singleton map";
+
+    h.emplace(2, 20);
+    const auto n2 = h.bucket(2);
+    EXPECT_FALSE(h.begin(n1) == h.end(n1)) << "two elements map";
+    EXPECT_EQ(1, std::distance(h.begin(n1), h.end(n1))) << "two elements map";
+    EXPECT_FALSE(h.begin(n2) == h.end(n2)) << "two elements map";
+    EXPECT_EQ(1, std::distance(h.begin(n2), h.end(n2))) << "two elements map";
+    EXPECT_EQ(1, std::distance(h.cbegin(n1), h.cend(n1))) << "two elements map";
+    EXPECT_EQ(1, std::distance(h.cbegin(n2), h.cend(n2))) << "two elements map";
+    EXPECT_EQ(10, h.cbegin(n1)->second) << "two elements map";
+    EXPECT_EQ(20, h.cbegin(n2)->second) << "two elements map";
+}
+
 TEST(DenseHashSetMoveTest, MoveConstructor)
 {
     dense_hash_set<A, HashA> h;
@@ -503,4 +567,41 @@ TEST(DenseHashSetMoveTest, Emplace)
     ASSERT_EQ(0, A::copy_assign);
     ASSERT_EQ(0, A::move_ctor);
     ASSERT_EQ(0, A::move_assign);
+}
+
+TEST(DenseHashSetIfaceTest, Insert)
+{
+    dense_hash_set<int> h;
+    h.set_empty_key(0);
+
+    const int k1 = 10;
+    int k2 = 20;
+    std::vector<int> v { 5, 15, 25, 35 };
+
+    EXPECT_TRUE(h.insert(k1).second);
+    EXPECT_TRUE(h.insert(k2).second);
+    h.insert(h.begin(), 2);
+    h.insert(h.begin(), std::move(3));
+    h.insert(v.begin(), v.end());
+    h.insert({11, 21, 31});
+    EXPECT_EQ(11, h.size());
+}
+
+TEST(DenseHashMapIfaceTest, Insert)
+{
+    dense_hash_map<int, int> h;
+    h.set_empty_key(0);
+
+    const std::pair<const int, int> k1 { 10, 100 };
+    std::pair<const int, int> k2 { 20, 200 };
+    const std::pair<const int, int> k3 { 30, 300 };
+    std::vector<std::pair<const int, int>> v { {5, 50}, {15, 150} };
+
+    EXPECT_TRUE(h.insert(k1).second);
+    EXPECT_TRUE(h.insert(k2).second);
+    h.insert(h.begin(), k3);
+    h.insert(h.begin(), std::pair<const int, int>{2, 20});
+    h.insert(v.begin(), v.end());
+    h.insert({{11, 110}, {21, 210}, {31, 310}});
+    EXPECT_EQ(9, h.size());
 }
