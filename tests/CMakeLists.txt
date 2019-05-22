@@ -14,5 +14,11 @@ add_executable(sparsehash_unittests
 add_executable(bench bench.cc)
 
 add_test(sparsehash_unittests sparsehash_unittests)
-target_link_libraries(sparsehash_unittests gtest pthread)
-target_link_libraries(bench pthread)
+
+set(_THREAD_LIB "")
+if(NOT WIN32)
+    set(_THREAD_LIB pthread)
+endif()
+
+target_link_libraries(sparsehash_unittests gtest ${_THREAD_LIB})
+target_link_libraries(bench ${_THREAD_LIB})
