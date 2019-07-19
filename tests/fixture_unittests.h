@@ -140,6 +140,38 @@ struct Hasher {
   mutable int num_compares_;
 };
 
+// A transparent hash function that uses the transparent_key_equal to allow
+// heterogeneous lookup and keeps track of how often it's called. Similar to
+// the hash function above, we use a simple djb-hash so we don't depend on
+// how STL hashes.  We use this same method to do the key-comparison, so we
+// can keep track of comparison-counts too.
+struct TransparentHasher : Hasher {
+  using transparent_key_equal = TransparentHasher;
+  using is_transparent = void;
+
+  explicit TransparentHasher(int i = 0) : Hasher(i) {}
+
+  using Hasher::operator();
+
+  template <typename T>
+  size_t operator()(const pair<T, T>& a) const {
+    return this->operator()(a.first);
+  }
+
+  template <typename T>
+  bool operator()(const pair<T, T>& a, const pair<T, T>& b) const {
+    return this->operator()(a.first, b.first);
+  }
+  template <typename T>
+  bool operator()(const T& a, const pair<T, T>& b) const {
+    return this->operator()(a, b.first);
+  }
+  template <typename T>
+  bool operator()(const pair<T, T>& a, const T& b) const {
+    return this->operator()(a.first, b);
+  }
+};
+
 // Allocator that allows controlling its size in various ways, to test
 // allocator overflow.  Because we use this allocator in a vector, we
 // need to define != and swap for gcc.
@@ -214,6 +246,13 @@ struct Negation {
   const Value operator()(const Value& v) const { return -v; }
 };
 
+template <class Value>
+struct PairNegation {
+  typedef Value result_type;
+  Value operator()(Value& v) { return Value(-v.first, -v.second); }
+  const Value operator()(const Value& v) const { return Value(-v.first, -v.second); }
+};
+
 struct Capital {
   typedef string result_type;
   string operator()(string& s) { return string(1, s[0] ^ 32) + s.substr(1); }
@@ -247,6 +286,8 @@ template <> ValueType UniqueObjectHelper(int index);
 template <> pair<const int, int> UniqueObjectHelper(int index);
 template <> pair<const string, string> UniqueObjectHelper(int index);
 template <> pair<const char* const, ValueType> UniqueObjectHelper(int index);
+template <> pair<int, int> UniqueObjectHelper(int index);
+template <> pair<const pair<int, int>, int> UniqueObjectHelper(int index);
 
 template <typename HashtableType>
 class HashtableTest : public ::testing::Test {
@@ -260,6 +301,24 @@ class HashtableTest : public ::testing::Test {
     return this->ht_.get_key(this->UniqueObject(index));
   }
 
+ private:
+  template<typename T>
+  T get_lookup_key(const T& key) {
+    printf("get_lookup_key\n");
+    return key;
+  }
+
+  template<typename T, typename U>
+  T get_lookup_key(const pair<T, U>& key) {
+    printf("get_lookup_key pair\n");
+    return key.first;
+  }
+
+ public:
+  auto UniqueLookupKey(int index) -> decltype(this->get_lookup_key(this->UniqueKey(index))) {
+    return this->get_lookup_key(this->UniqueKey(index));
+  }
+
  protected:
   HashtableType ht_;
 };
@@ -270,9 +329,11 @@ class HashtableTest : public ::testing::Test {
 extern const string kEmptyString;
 extern const string kDeletedString;
 extern const int kEmptyInt;
+extern const pair<int, int> kEmptyIntPair;
 extern const int kDeletedInt;  // an unlikely-to-pick int
 extern const char* const kEmptyCharStar;
 extern const char* const kDeletedCharStar;
+extern const pair<int, int> kDeletedIntPair;
 
 // Third table has key associated with a value of -value
 #define INT_HASHTABLES                                                       \
@@ -288,6 +349,22 @@ extern const char* const kDeletedCharStar;
       HashtableInterface_DenseHashtable<                                     \
           int, int, kEmptyInt, Hasher, Negation<int>,                        \
           SetKey<int, Negation<int>>, Hasher, Alloc<int>>
+
+#define TRANSPARENT_INT_HASHTABLES                                            \
+  HashtableInterface_SparseHashMap<int, int, TransparentHasher,               \
+                                       TransparentHasher, Alloc<int>>,        \
+      HashtableInterface_SparseHashSet<int, TransparentHasher,                \
+                                       TransparentHasher, Alloc<int>>,        \
+      HashtableInterface_SparseHashtable<                                     \
+          int, int, TransparentHasher, Negation<int>,                         \
+          SetKey<int, Negation<int>>, TransparentHasher, Alloc<int>>,         \
+      HashtableInterface_DenseHashMap<int, int, kEmptyInt, TransparentHasher, \
+          TransparentHasher, Alloc<int>>,                                     \
+      HashtableInterface_DenseHashSet<int, kEmptyInt, TransparentHasher,      \
+                                      TransparentHasher, Alloc<int>>,         \
+      HashtableInterface_DenseHashtable<                                      \
+          int, int, kEmptyInt, TransparentHasher, Negation<int>,              \
+          SetKey<int, Negation<int>>, TransparentHasher, Alloc<int>>
 
 // Third table has key associated with a value of Cap(value)
 #define STRING_HASHTABLES                                                      \
@@ -325,6 +402,28 @@ extern const char* const kDeletedCharStar;
           const char*, const char*, kEmptyCharStar, Hasher, Identity,         \
           SetKey<const char*, Identity>, Hasher, Alloc<ValueType>>
 
+#define INT_PAIR_HASHTABLES                                                 \
+  HashtableInterface_SparseHashMap<pair<int, int>, int, TransparentHasher,  \
+                                   TransparentHasher, Alloc<int>>,          \
+      HashtableInterface_SparseHashSet<pair<int, int>, TransparentHasher,   \
+                                       TransparentHasher, Alloc<int>>,      \
+      HashtableInterface_SparseHashtable<                                   \
+          pair<int, int>, pair<int, int>, TransparentHasher,                \
+          PairNegation<pair<int, int>>, SetKey<pair<int, int>,              \
+          PairNegation<pair<int, int>>>, TransparentHasher,                 \
+          Alloc<int>>,                                                      \
+      HashtableInterface_DenseHashMap<                                      \
+          pair<int, int>, int, kEmptyIntPair, TransparentHasher,            \
+          TransparentHasher, Alloc<int>>,                                   \
+      HashtableInterface_DenseHashSet<                                      \
+          pair<int, int>, kEmptyIntPair, TransparentHasher,                 \
+          TransparentHasher, Alloc<int>>,                                   \
+      HashtableInterface_DenseHashtable<                                    \
+          pair<int, int>, pair<int, int>, kEmptyIntPair, TransparentHasher, \
+          PairNegation<pair<int, int>>, SetKey<pair<int, int>,              \
+          PairNegation<pair<int, int>>>, TransparentHasher,                 \
+          Alloc<int>>
+
 // This is the list of types we run each test against.
 // We need to define the same class 4 times due to limitations in the
 // testing framework.  Basically, we associate each class below with
@@ -336,15 +435,19 @@ class HashtableStringTest : public HashtableTest<HashtableType> {};
 template <typename HashtableType>
 class HashtableCharStarTest : public HashtableTest<HashtableType> {};
 template <typename HashtableType>
+class HashtableHeterogeneousLookupTest : public HashtableTest<HashtableType> {};
+template <typename HashtableType>
 class HashtableAllTest : public HashtableTest<HashtableType> {};
 
-typedef testing::Types<INT_HASHTABLES> IntHashtables;
+typedef testing::Types<INT_HASHTABLES, TRANSPARENT_INT_HASHTABLES> IntHashtables;
 typedef testing::Types<STRING_HASHTABLES> StringHashtables;
 typedef testing::Types<CHARSTAR_HASHTABLES> CharStarHashtables;
-typedef testing::Types<INT_HASHTABLES, STRING_HASHTABLES, CHARSTAR_HASHTABLES>
-    AllHashtables;
+typedef testing::Types<INT_PAIR_HASHTABLES> IntPairHashtables;
+typedef testing::Types<INT_HASHTABLES, TRANSPARENT_INT_HASHTABLES, STRING_HASHTABLES,
+                       CHARSTAR_HASHTABLES, INT_PAIR_HASHTABLES> AllHashtables;
 
 TYPED_TEST_CASE(HashtableIntTest, IntHashtables);
 TYPED_TEST_CASE(HashtableStringTest, StringHashtables);
 TYPED_TEST_CASE(HashtableCharStarTest, CharStarHashtables);
+TYPED_TEST_CASE(HashtableHeterogeneousLookupTest, IntPairHashtables);
 TYPED_TEST_CASE(HashtableAllTest, AllHashtables);

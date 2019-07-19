@@ -112,9 +112,15 @@ class sparse_hash_set {
     }
   };
 
-  typedef sparse_hashtable<Value, Value, HashFcn, Identity, SetKey, EqualKey,
+  typedef typename sparsehash_internal::key_equal_chosen<HashFcn, EqualKey>::type EqualKeyChosen;
+  typedef sparse_hashtable<Value, Value, HashFcn, Identity, SetKey, EqualKeyChosen,
                            Alloc> ht;
   ht rep;
+
+  static_assert(!sparsehash_internal::has_transparent_key_equal<HashFcn>::value
+                || std::is_same<EqualKey, std::equal_to<Value>>::value
+                || std::is_same<EqualKey, EqualKeyChosen>::value,
+                "Heterogeneous lookup requires key_equal to either be the default container value or the same as the type provided by hash");
 
  public:
   typedef typename ht::key_type key_type;
@@ -216,9 +222,23 @@ class sparse_hash_set {
   // Lookup routines
   iterator find(const key_type& key) const { return rep.find(key); }
 
+  template <typename K>
+  typename std::enable_if<sparsehash_internal::has_transparent_key_equal<hasher, K>::value, iterator>::type
+  find(const K& key) const { return rep.find(key); }
+
   size_type count(const key_type& key) const { return rep.count(key); }
 
+  template <typename K>
+  typename std::enable_if<sparsehash_internal::has_transparent_key_equal<hasher, K>::value, size_type>::type
+  count(const K& key) const { return rep.count(key); }
+
   std::pair<iterator, iterator> equal_range(const key_type& key) const {
+    return rep.equal_range(key);
+  }
+
+  template <typename K>
+  typename std::enable_if<sparsehash_internal::has_transparent_key_equal<hasher, K>::value, std::pair<iterator, iterator>>::type
+  equal_range(const K& key) const {
     return rep.equal_range(key);
   }
 

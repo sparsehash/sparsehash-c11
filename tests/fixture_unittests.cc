@@ -15,6 +15,8 @@ const int kEmptyInt = 0;
 const int kDeletedInt = -1234676543;  // an unlikely-to-pick int
 const char* const kEmptyCharStar = "--empty char*--";
 const char* const kDeletedCharStar = "--deleted char*--";
+const pair<int, int> kEmptyIntPair = {0, 0};
+const pair<int, int> kDeletedIntPair = {-1234676543, -1234676543};
 
 const char* const ValueType::kDefault = "hi";
 
@@ -75,4 +77,16 @@ pair<const char* const, ValueType> UniqueObjectHelper(int index) {
   return pair<const char* const, ValueType>(
       UniqueObjectHelper<char*>(index),
       UniqueObjectHelper<ValueType>(index + 1));
+}
+
+template <>
+pair<int, int> UniqueObjectHelper(int index) {
+  return pair<int, int>(index, index + 1);
+}
+
+template <>
+pair<const pair<int, int>, int> UniqueObjectHelper(int index) {
+  return pair<const pair<int, int>, int>(
+      UniqueObjectHelper<pair<int, int>>(index),
+      index + 2);
 }

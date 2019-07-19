@@ -860,7 +860,8 @@ class sparse_hashtable {
   // if object is not found; 2nd is ILLEGAL_BUCKET if it is.
   // Note: because of deletions where-to-insert is not trivial: it's the
   // first deleted bucket we see, as long as we don't find the key later
-  std::pair<size_type, size_type> find_position(const key_type& key) const {
+  template <typename K>
+  std::pair<size_type, size_type> find_position(const K& key) const {
     size_type num_probes = 0;  // how many times we've probed
     const size_type bucket_count_minus_one = bucket_count() - 1;
     size_type bucknum = hash(key) & bucket_count_minus_one;
@@ -887,7 +888,8 @@ class sparse_hashtable {
   }
 
  public:
-  iterator find(const key_type& key) {
+  template <typename K>
+  iterator find(const K& key) {
     if (size() == 0) return end();
     std::pair<size_type, size_type> pos = find_position(key);
     if (pos.first == ILLEGAL_BUCKET)  // alas, not there
@@ -896,7 +898,8 @@ class sparse_hashtable {
       return iterator(this, table.get_iter(pos.first), table.nonempty_end());
   }
 
-  const_iterator find(const key_type& key) const {
+  template <typename K>
+  const_iterator find(const K& key) const {
     if (size() == 0) return end();
     std::pair<size_type, size_type> pos = find_position(key);
     if (pos.first == ILLEGAL_BUCKET)  // alas, not there
@@ -914,13 +917,15 @@ class sparse_hashtable {
   }
 
   // Counts how many elements have key key.  For maps, it's either 0 or 1.
-  size_type count(const key_type& key) const {
+  template <typename K>
+  size_type count(const K& key) const {
     std::pair<size_type, size_type> pos = find_position(key);
     return pos.first == ILLEGAL_BUCKET ? 0 : 1;
   }
 
   // Likewise, equal_range doesn't really make sense for us.  Oh well.
-  std::pair<iterator, iterator> equal_range(const key_type& key) {
+  template <typename K>
+  std::pair<iterator, iterator> equal_range(const K& key) {
     iterator pos = find(key);  // either an iterator or end
     if (pos == end()) {
       return std::pair<iterator, iterator>(pos, pos);
@@ -929,8 +934,9 @@ class sparse_hashtable {
       return std::pair<iterator, iterator>(startpos, pos);
     }
   }
+  template <typename K>
   std::pair<const_iterator, const_iterator> equal_range(
-      const key_type& key) const {
+      const K& key) const {
     const_iterator pos = find(key);  // either an iterator or end
     if (pos == end()) {
       return std::pair<const_iterator, const_iterator>(pos, pos);
@@ -1201,7 +1207,8 @@ class sparse_hashtable {
     void set_key(pointer v, const key_type& k) const {
       SetKey::operator()(v, k);
     }
-    bool equals(const key_type& a, const key_type& b) const {
+    template <typename K1, typename K2>
+    bool equals(const K1& a, const K2& b) const {
       return EqualKey::operator()(a, b);
     }
 
@@ -1212,8 +1219,10 @@ class sparse_hashtable {
   };
 
   // Utility functions to access the templated operators
-  size_type hash(const key_type& v) const { return settings.hash(v); }
-  bool equals(const key_type& a, const key_type& b) const {
+  template <typename K>
+  size_type hash(const K& v) const { return settings.hash(v); }
+  template <typename K1, typename K2>
+  bool equals(const K1& a, const K2& b) const {
     return key_info.equals(a, b);
   }
   typename ExtractKey::result_type get_key(const_reference v) const {

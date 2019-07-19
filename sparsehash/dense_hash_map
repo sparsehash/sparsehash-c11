@@ -134,10 +134,17 @@ class dense_hash_map {
       new(value) std::pair<const Key, T>(std::piecewise_construct, std::forward_as_tuple(new_key), std::forward_as_tuple());
     }
   };
+
   // The actual data
+  typedef typename sparsehash_internal::key_equal_chosen<HashFcn, EqualKey>::type EqualKeyChosen;
   typedef dense_hashtable<std::pair<const Key, T>, Key, HashFcn, SelectKey,
-                          SetKey, EqualKey, Alloc> ht;
+                          SetKey, EqualKeyChosen, Alloc> ht;
   ht rep;
+
+  static_assert(!sparsehash_internal::has_transparent_key_equal<HashFcn>::value
+                || std::is_same<EqualKey, std::equal_to<Key>>::value
+                || std::is_same<EqualKey, EqualKeyChosen>::value,
+                "Heterogeneous lookup requires key_equal to either be the default container value or the same as the type provided by hash");
 
  public:
   typedef typename ht::key_type key_type;
@@ -256,6 +263,13 @@ class dense_hash_map {
   iterator find(const key_type& key) { return rep.find(key); }
   const_iterator find(const key_type& key) const { return rep.find(key); }
 
+  template <typename K>
+  typename std::enable_if<sparsehash_internal::has_transparent_key_equal<hasher, K>::value, iterator>::type
+  find(const K& key) { return rep.find(key); }
+  template <typename K>
+  typename std::enable_if<sparsehash_internal::has_transparent_key_equal<hasher, K>::value, const_iterator>::type
+  find(const K& key) const { return rep.find(key); }
+
   data_type& operator[](const key_type& key) {  // This is our value-add!
     // If key is in the hashtable, returns find(key)->second,
     // otherwise returns insert(value_type(key, T()).first->second.
@@ -269,11 +283,26 @@ class dense_hash_map {
 
   size_type count(const key_type& key) const { return rep.count(key); }
 
+  template <typename K>
+  typename std::enable_if<sparsehash_internal::has_transparent_key_equal<hasher, K>::value, size_type>::type
+  count(const K& key) const { return rep.count(key); }
+
   std::pair<iterator, iterator> equal_range(const key_type& key) {
     return rep.equal_range(key);
   }
   std::pair<const_iterator, const_iterator> equal_range(
       const key_type& key) const {
+    return rep.equal_range(key);
+  }
+
+  template<typename K>
+  typename std::enable_if<sparsehash_internal::has_transparent_key_equal<hasher, K>::value, std::pair<iterator, iterator>>::type
+  equal_range(const K& key) {
+    return rep.equal_range(key);
+  }
+  template<typename K>
+  typename std::enable_if<sparsehash_internal::has_transparent_key_equal<hasher, K>::value, std::pair<const_iterator, const_iterator>>::type
+  equal_range(const K& key) const {
     return rep.equal_range(key);
   }
 
