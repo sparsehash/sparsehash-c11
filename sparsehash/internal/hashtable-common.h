@@ -47,6 +47,32 @@
 
 namespace google {
 namespace sparsehash_internal {
+
+template<typename... Ts> struct make_void { typedef void type;};
+template<typename... Ts> using void_t = typename make_void<Ts...>::type;
+
+template <class HashFcn, class = void>
+struct has_is_transparent : std::false_type {};
+
+template <class HashFcn>
+struct has_is_transparent<HashFcn, void_t<typename HashFcn::transparent_key_equal::is_transparent>> : std::true_type {};
+
+template <class HashFcn, class = void, class = void>
+struct has_transparent_key_equal : std::false_type {};
+
+template <class HashFcn, class Key>
+struct has_transparent_key_equal<HashFcn, Key, void_t<typename HashFcn::transparent_key_equal>> : std::true_type {};
+
+template <class HashFcn, class EqualKey, bool = has_transparent_key_equal<HashFcn>::value>
+struct key_equal_chosen {
+  using type = EqualKey;
+};
+
+template <class HashFcn, class EqualKey>
+struct key_equal_chosen<HashFcn, EqualKey, true> {
+  using type = typename HashFcn::transparent_key_equal;
+};
+
 // Adaptor methods for reading/writing data from an INPUT or OUPTUT
 // variable passed to serialize() or unserialize().  For now we
 // have implemented INPUT/OUTPUT for FILE*, istream*/ostream* (note
@@ -215,6 +241,8 @@ class sh_hashtable_settings : public HashFunc {
   typedef Key key_type;
   typedef HashFunc hasher;
   typedef SizeType size_type;
+  static_assert(!has_transparent_key_equal<HashFunc>::value || has_is_transparent<HashFunc, void>::value,
+                "hash provided non-transparent key_equal");
 
  public:
   sh_hashtable_settings(const hasher& hf, const float ht_occupancy_flt,
@@ -230,7 +258,8 @@ class sh_hashtable_settings : public HashFunc {
     set_shrink_factor(ht_empty_flt);
   }
 
-  size_type hash(const key_type& v) const {
+  template<typename K>
+  size_type hash(const K& v) const {
     // We munge the hash value when we don't trust hasher::operator().
     return hash_munger<Key>::MungedHash(hasher::operator()(v));
   }

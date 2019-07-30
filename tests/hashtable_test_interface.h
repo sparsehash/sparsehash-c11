@@ -223,6 +223,13 @@ class BaseHashtableInterface {
     return const_iterator(ht_.find(key), this);
   }
 
+  template <typename K>
+  typename std::enable_if<sparsehash_internal::has_transparent_key_equal<hasher, K>::value, iterator>::type
+  find(const K& key) { return iterator(ht_.find(key), this); }
+  template <typename K>
+  typename std::enable_if<sparsehash_internal::has_transparent_key_equal<hasher, K>::value, const_iterator>::type
+  find(const K& key) const { return const_iterator(ht_.find(key), this); }
+
   // Rather than try to implement operator[], which doesn't make much
   // sense for set types, we implement two methods: bracket_equal and
   // bracket_assign.  By default, bracket_equal(a, b) returns true if
@@ -245,6 +252,10 @@ class BaseHashtableInterface {
 
   size_type count(const key_type& key) const { return ht_.count(key); }
 
+  template <typename K>
+  typename std::enable_if<sparsehash_internal::has_transparent_key_equal<hasher, K>::value, size_type>::type
+  count(const K& key) const { return ht_.count(key); }
+
   std::pair<iterator, iterator> equal_range(const key_type& key) {
     std::pair<typename HT::iterator, typename HT::iterator> r =
         ht_.equal_range(key);
@@ -253,6 +264,24 @@ class BaseHashtableInterface {
   }
   std::pair<const_iterator, const_iterator> equal_range(
       const key_type& key) const {
+    std::pair<typename HT::const_iterator, typename HT::const_iterator> r =
+        ht_.equal_range(key);
+    return std::pair<const_iterator, const_iterator>(
+        const_iterator(r.first, this), const_iterator(r.second, this));
+  }
+
+  template<typename K>
+  typename std::enable_if<sparsehash_internal::has_transparent_key_equal<hasher, K>::value, std::pair<iterator, iterator>>::type
+  equal_range(const K& key) {
+    std::pair<typename HT::iterator, typename HT::iterator> r =
+        ht_.equal_range(key);
+    return std::pair<iterator, iterator>(iterator(r.first, this),
+                                         iterator(r.second, this));
+  }
+  template<typename K>
+  typename std::enable_if<sparsehash_internal::has_transparent_key_equal<hasher, K>::value, std::pair<const_iterator, const_iterator>>::type
+  equal_range(
+      const K& key) const {
     std::pair<typename HT::const_iterator, typename HT::const_iterator> r =
         ht_.equal_range(key);
     return std::pair<const_iterator, const_iterator>(
