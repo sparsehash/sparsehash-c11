@@ -216,6 +216,7 @@ class sparse_hash_set {
     rep.set_resizing_parameters(shrink, grow);
   }
 
+  void reserve(size_type size) { rehash(size); } // note: rehash internally treats hint/size as number of elements
   void resize(size_type hint) { rep.resize(hint); }
   void rehash(size_type hint) { resize(hint); }  // the tr1 name
 
