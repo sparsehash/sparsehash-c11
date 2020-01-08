@@ -188,16 +188,16 @@ TYPED_TEST(HashtableIntTest, Typedefs) {
   // the int tables.  This is just a compile-time "test"; nothing here
   // can fail at runtime.
   this->ht_.set_deleted_key(-2);  // just so deleted_key succeeds
-  typename TypeParam::key_type kt;
-  typename TypeParam::value_type vt;
+  typename TypeParam::key_type kt;               (void)kt;
+  typename TypeParam::value_type vt;             (void)vt;  // value_type may not be copyable.  Easiest not to try.
   typename TypeParam::hasher h;
   typename TypeParam::key_equal ke;
   typename TypeParam::allocator_type at;
 
-  typename TypeParam::size_type st;
-  typename TypeParam::difference_type dt;
-  typename TypeParam::pointer p;
-  typename TypeParam::const_pointer cp;
+  typename TypeParam::size_type st;              (void)st;
+  typename TypeParam::difference_type dt;        (void)dt;
+  typename TypeParam::pointer p;                 (void)p;
+  typename TypeParam::const_pointer cp;          (void)cp;
 
   typename TypeParam::iterator i;
   typename TypeParam::const_iterator ci;
@@ -212,14 +212,10 @@ TYPED_TEST(HashtableIntTest, Typedefs) {
   // the type isn't used at all, and there's no good way to use the
   // variable.
   kt = this->ht_.deleted_key();
-  (void)vt;  // value_type may not be copyable.  Easiest not to try.
   h = this->ht_.hash_funct();
   ke = this->ht_.key_eq();
   at = this->ht_.get_allocator();
   st = this->ht_.size();
-  (void)dt;
-  (void)p;
-  (void)cp;
   i = this->ht_.begin();
   ci = this->ht_.begin();
   li = this->ht_.begin(0);
@@ -1543,7 +1539,7 @@ TEST(HashtableTest, ResizeWithoutShrink) {
       ht.erase(key);
       ht.erase(key + (j < max_entries / 2));
     }
-    EXPECT_LT(ht.bucket_count(), 4096);
+    EXPECT_LT(ht.bucket_count(), 4096ul);
   }
 }
 
