@@ -584,7 +584,7 @@ TEST(DenseHashSetIfaceTest, Insert)
     h.insert(h.begin(), std::move(3));
     h.insert(v.begin(), v.end());
     h.insert({11, 21, 31});
-    EXPECT_EQ(11, h.size());
+    EXPECT_EQ(11ul, h.size());
 }
 
 TEST(DenseHashMapIfaceTest, Insert)
@@ -603,5 +603,5 @@ TEST(DenseHashMapIfaceTest, Insert)
     h.insert(h.begin(), std::pair<const int, int>{2, 20});
     h.insert(v.begin(), v.end());
     h.insert({{11, 110}, {21, 210}, {31, 310}});
-    EXPECT_EQ(9, h.size());
+    EXPECT_EQ(9ul, h.size());
 }

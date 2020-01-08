@@ -1,21 +1,26 @@
 
-language: cpp
+language: generic
 
-os:
-  - osx
-  - linux
-
-addons:
-  apt:
-    sources:
-      - sourceline: 'ppa:ubuntu-toolchain-r/test'
-    packages:
-      - gcc-5
-      - g++-5
+matrix:
+  include:
+  - os: linux
+    dist: bionic
+    sudo: required
+    compiler: gcc
+    addons:
+      apt:
+        sources:
+        - sourceline: 'ppa:ubuntu-toolchain-r/test'
+        packages:
+          - g++-8
+  - os: osx
+    sudo: required
+    osx_image: xcode11
+    compiler: clang
 
 before_install:
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 60 --slave /usr/bin/g++ g++ /usr/bin/g++-5; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo ln -fs /usr/bin/gcc-8 /usr/local/bin/gcc; sudo ln -fs /usr/bin/g++-8 /usr/local/bin/g++; fi
 
 script:
-  - make clean all check
+  - make clean all check _CXXFLAGS="-Werror"
   - ./bench
