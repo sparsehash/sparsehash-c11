@@ -116,7 +116,7 @@ class dense_hash_map {
   struct SelectKey {
     typedef const Key& result_type;
     template <typename Pair>
-    const Key& operator()(Pair&& p) const {
+    const Key& operator()(Pair& p) const {
       return p.first;
     }
   };

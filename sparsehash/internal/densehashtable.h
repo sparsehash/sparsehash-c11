@@ -1285,7 +1285,7 @@ class dense_hashtable {
     // We want to return the exact same type as ExtractKey: Key or const Key&
     template <typename V>
     typename ExtractKey::result_type get_key(V&& v) const {
-      return ExtractKey::operator()(std::forward<V>(v));
+      return ExtractKey::operator()(v);
     }
     void set_key(pointer v, const key_type& k) const {
       SetKey::operator()(v, k);
