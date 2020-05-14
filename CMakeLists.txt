@@ -1,7 +1,8 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.3)
 
 set(CMAKE_BUILD_TYPE Release)
-project (sparsehash)
+project (sparsehash
+         VERSION 2.11.1)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
 if(NOT MSVC)
