@@ -114,9 +114,16 @@ class dense_hash_map {
  private:
   // Apparently select1st is not stl-standard, so we define our own
   struct SelectKey {
-    typedef const Key& result_type;
+    typedef const Key& const_result_type;
+    typedef Key result_type;
+
     template <typename Pair>
-    const Key& operator()(Pair&& p) const {
+    result_type operator()(Pair&& p) const {
+      return p.first;
+    }
+
+    template <typename Pair>
+    const_result_type operator()(Pair const& p) const {
       return p.first;
     }
   };
