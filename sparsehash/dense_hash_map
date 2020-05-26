@@ -115,8 +115,17 @@ class dense_hash_map {
   // Apparently select1st is not stl-standard, so we define our own
   struct SelectKey {
     typedef const Key& result_type;
-    template <typename Pair>
-    const Key& operator()(Pair&& p) const {
+
+    template <class Type>
+    using decay_t = typename std::decay<Type>::type;
+
+    template <typename Pair, 
+              typename = typename std::enable_if<std::is_same<
+                  decay_t<typename decay_t<Pair>::first_type>,
+                  decay_t<Key>
+                >::value>::type
+             >
+    result_type operator()(Pair&& p) const {
       return p.first;
     }
   };
