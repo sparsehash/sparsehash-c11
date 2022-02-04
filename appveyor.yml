@@ -39,9 +39,7 @@ build_script:
   - git clone https://github.com/mkn/google.sparsehash -b master --depth 1 mkn
   - bash -c "PATH=\"/c/Program Files/Git/usr/bin:$PATH\"; mv mkn/* . && rm -rf mkn && mv ../google ."
 
-  - curl -o mkn.tar -L https://ci.appveyor.com/api/buildjobs/bdexxue25l58r0b1/artifacts/mkn.tar
-  - bash -c "PATH=\"/c/Program Files/Git/usr/bin:$PATH\"; tar xf mkn.tar"
-  - cp win/master/mkn.exe .
+  - curl -Lo mkn.exe https://github.com/mkn/mkn/releases/download/latest/mkn.exe
 
   - bash -c "PATH=\"/c/Program Files/Git/usr/bin:$PATH\"; ./mkn build -a \"-bigobj -D_SPARSEHASH_CI_TESTING_\" -Og 0 -dp test run"
   - bash -c "PATH=\"/c/Program Files/Git/usr/bin:$PATH\"; ./mkn build -a \"-bigobj -D_SPARSEHASH_CI_TESTING_\" -Og 0 -dp bench run"
