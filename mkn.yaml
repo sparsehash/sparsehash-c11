@@ -1,0 +1,33 @@
+#! clean build -dtKOp test,bench
+
+name: google.sparsehash
+version: master
+inc: .
+
+profile:
+- name: gtest
+  inc: tests
+  src: tests/gtest/gmock-gtest-all.cc
+
+- name: test
+  inc: .
+  self: gtest
+  src: |
+      tests/allocator_unittests.cc
+      tests/dense_hash_map_unittests.cc
+      tests/dense_hash_set_unittests.cc
+      tests/fixture_unittests.cc
+      tests/hashtable_c11_unittests.cc
+      tests/hashtable_unittests.cc
+      tests/simple_unittests.cc
+      tests/sparsetable_unittests.cc
+      tests/testmain.cc
+  main: tests/testmain.cc
+
+- name: bench
+  inc: .
+  main: tests/bench.cc
+
+
+
+
