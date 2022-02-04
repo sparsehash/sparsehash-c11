@@ -14,3 +14,11 @@ jobs:
 
     - run: make clean all check
     - run: ./bench
+
+    - name: mkn
+    - run: |
+        curl -Lo mkn https://github.com/mkn/mkn/releases/download/latest/mkn_osx
+        chmod +x mkn
+        KLOG=3 ./mkn build run -KOp gtest -a "-std=c++11 -fPIC"
+        KLOG=3 ./mkn clean build run -KtOp test,bench -a "-std=c++11 -fPIC" -W 9
+
