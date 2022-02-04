@@ -12,12 +12,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - run: make clean all check
-    - run: ./bench
-
     - name: mkn
       run: |
+        rm -rf tests/{gtest,gmock}
         curl -Lo mkn https://github.com/mkn/mkn/releases/download/latest/mkn_nix
         chmod +x mkn
-        KLOG=3 ./mkn build run -KOp gtest -a "-std=c++11 -fPIC"
-        KLOG=3 ./mkn clean build run -KtOp test,bench -a "-std=c++11 -fPIC" -W 9
+        KLOG=3 ./mkn build run -dtKOp test,bench -a "-std=c++11 -fPIC" -W 9
+

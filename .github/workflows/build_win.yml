@@ -18,7 +18,8 @@ jobs:
         MKN_CL_PREFERRED: 1
       run: | # /bin/link interferes with cl/link.exe
         bash -c "rm /bin/link"
+        bash -c "rm -rf tests/{gtest,gmock}"
         bash -c "curl -Lo mkn.exe https://github.com/PhilipDeegan/mkn/releases/download/latest/mkn.exe"
         call "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
-        bash -c 'KLOG=3 ./mkn clean build run -dtKOp test -a "-EHsc -std:c++11 -bigobj -D_SPARSEHASH_CI_TESTING_"'
+        bash -c 'KLOG=3 ./mkn build run -dtKOp test -a "-EHsc -bigobj -D_SPARSEHASH_CI_TESTING_"'
 

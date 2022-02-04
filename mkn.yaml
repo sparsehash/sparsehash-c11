@@ -5,13 +5,9 @@ version: master
 inc: .
 
 profile:
-- name: gtest
-  inc: tests
-  src: tests/gtest/gmock-gtest-all.cc
-
 - name: test
   inc: .
-  self: gtest
+  dep: google.test
   src: |
       tests/allocator_unittests.cc
       tests/dense_hash_map_unittests.cc
