@@ -16,7 +16,7 @@ jobs:
     - run: ./bench
 
     - name: mkn
-    - run: |
+      run: |
         curl -Lo mkn https://github.com/mkn/mkn/releases/download/latest/mkn_osx
         chmod +x mkn
         KLOG=3 ./mkn build run -KOp gtest -a "-std=c++11 -fPIC"
