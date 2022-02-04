@@ -12,5 +12,5 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - run: make clean all check _CXXFLAGS="-Werror"
+    - run: make clean all check
     - run: ./bench
