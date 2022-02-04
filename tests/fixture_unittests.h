@@ -446,8 +446,8 @@ typedef testing::Types<INT_PAIR_HASHTABLES> IntPairHashtables;
 typedef testing::Types<INT_HASHTABLES, TRANSPARENT_INT_HASHTABLES, STRING_HASHTABLES,
                        CHARSTAR_HASHTABLES, INT_PAIR_HASHTABLES> AllHashtables;
 
-TYPED_TEST_CASE(HashtableIntTest, IntHashtables);
-TYPED_TEST_CASE(HashtableStringTest, StringHashtables);
-TYPED_TEST_CASE(HashtableCharStarTest, CharStarHashtables);
-TYPED_TEST_CASE(HashtableHeterogeneousLookupTest, IntPairHashtables);
-TYPED_TEST_CASE(HashtableAllTest, AllHashtables);
+TYPED_TEST_SUITE(HashtableIntTest, IntHashtables);
+TYPED_TEST_SUITE(HashtableStringTest, StringHashtables);
+TYPED_TEST_SUITE(HashtableCharStarTest, CharStarHashtables);
+TYPED_TEST_SUITE(HashtableHeterogeneousLookupTest, IntPairHashtables);
+TYPED_TEST_SUITE(HashtableAllTest, AllHashtables);
