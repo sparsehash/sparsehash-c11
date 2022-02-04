@@ -1635,7 +1635,7 @@ struct Memmove {
     this->i = that.i;
     num_copies++;
   }
-  Memmove& operator(Memmove const&) = default;
+  Memmove& operator=(Memmove const&) = default;
   int i;
   static int num_copies;
 };
@@ -1649,7 +1649,7 @@ struct NoMemmove {
     this->i = that.i;
     num_copies++;
   }
-  NoMemmove& operator(NoMemmove const&) = default;
+  NoMemmove& operator=(NoMemmove const&) = default;
   int i;
   static int num_copies;
 };
