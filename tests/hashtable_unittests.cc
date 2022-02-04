@@ -1648,6 +1648,7 @@ struct NoMemmove {
     this->i = that.i;
     num_copies++;
   }
+  NoMemmove& operator(NoMemmove const&) = default;
   int i;
   static int num_copies;
 };

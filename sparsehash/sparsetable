@@ -1812,6 +1812,8 @@ class sparsetable {
           table_size(s.table_size),
           num_buckets(s.num_buckets) {}
 
+    Settings& operator(Settings const&) = default;
+
     size_type table_size;   // how many buckets they want
     size_type num_buckets;  // number of non-empty buckets
   };
