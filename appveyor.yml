@@ -34,11 +34,6 @@ build_script:
   - SET MKN_COMPILE_THREADS=1 # mkn use 1 thread heap space issue
   - SET KLOG=3
 
-  - bash -c "PATH=\"/c/Program Files/Git/usr/bin:$PATH\"; mkdir ../google && mv * ../google"
-
-  - git clone https://github.com/mkn/google.sparsehash -b master --depth 1 mkn
-  - bash -c "PATH=\"/c/Program Files/Git/usr/bin:$PATH\"; mv mkn/* . && rm -rf mkn && mv ../google ."
-
   - curl -Lo mkn.exe https://github.com/mkn/mkn/releases/download/latest/mkn.exe
 
   - bash -c "PATH=\"/c/Program Files/Git/usr/bin:$PATH\"; ./mkn build -a \"-bigobj -D_SPARSEHASH_CI_TESTING_\" -Og 0 -dp test run"

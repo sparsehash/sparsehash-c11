@@ -1,4 +1,4 @@
-#! clean build -dtKOp test,bench
+#! clean build -dtOp test,bench
 
 name: google.sparsehash
 version: master
