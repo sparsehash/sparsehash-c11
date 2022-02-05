@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: macos-latest
 
 on:
   push:
@@ -12,5 +12,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - run: make clean all check _CXXFLAGS="-Werror"
-    - run: ./bench
+    - name: mkn
+      run: |
+        rm -rf tests/{gtest,gmock}
+        curl -Lo mkn https://github.com/mkn/mkn/releases/download/latest/mkn_osx
+        chmod +x mkn
+        KLOG=3 ./mkn build run -dtOp test,bench -a "-std=c++11 -fPIC -Wno-gnu-zero-variadic-macro-arguments" -W 9 -l -pthread
+

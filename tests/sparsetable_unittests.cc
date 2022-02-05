@@ -38,7 +38,7 @@
 #include <cstdio>
 #include <cstdint>
 #include "gtest/gtest.h"
-#include "gtest/gmock.h"  // for ElementsAre,ElementsAreArray and ContainerEq
+#include "gmock/gmock.h"  // for ElementsAre,ElementsAreArray and ContainerEq
 #include "sparsehash/sparsetable"
 
 using google::sparsetable;
