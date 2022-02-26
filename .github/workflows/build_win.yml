@@ -22,6 +22,6 @@ jobs:
       run: | # /bin/link interferes with cl/link.exe
         bash -c "rm /bin/link"
         bash -c "rm -rf tests/{gtest,gmock}"
-        bash -c "curl -Lo mkn.exe https://github.com/PhilipDeegan/mkn/releases/download/latest/mkn.exe"
+        bash -c "curl -Lo mkn.exe https://github.com/mkn/mkn/releases/download/latest/mkn.exe"
         bash -c 'KLOG=3 ./mkn build run -dtKOp test -a "-EHsc -bigobj -D_SPARSEHASH_CI_TESTING_"'
 
