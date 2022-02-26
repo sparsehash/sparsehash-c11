@@ -12,16 +12,16 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Configure build for amd64
-      uses: ilammy/msvc-dev-cmd@v1
+    - uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: amd64
 
-    - env:
+    - shell: cmd
+      env:
         MKN_CL_PREFERRED: 1
       run: | # /bin/link interferes with cl/link.exe
-        rm /bin/link
-        rm -rf tests/{gtest,gmock}
-        curl -Lo mkn.exe https://github.com/PhilipDeegan/mkn/releases/download/latest/mkn.exe
-        KLOG=3 ./mkn build run -dtKOp test -a "-EHsc -bigobj -D_SPARSEHASH_CI_TESTING_"
+        bash -c "rm /bin/link"
+        bash -c "rm -rf tests/{gtest,gmock}"
+        bash -c "curl -Lo mkn.exe https://github.com/PhilipDeegan/mkn/releases/download/latest/mkn.exe"
+        bash -c 'KLOG=3 ./mkn build run -dtKOp test -a "-EHsc -bigobj -D_SPARSEHASH_CI_TESTING_"'
 
