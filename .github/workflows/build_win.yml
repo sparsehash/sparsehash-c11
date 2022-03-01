@@ -1,0 +1,27 @@
+name: windows-latest
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: amd64
+
+    - shell: cmd
+      env:
+        MKN_CL_PREFERRED: 1
+      run: | # /bin/link interferes with cl/link.exe
+        bash -c "rm /bin/link"
+        bash -c "rm -rf tests/{gtest,gmock}"
+        bash -c "curl -Lo mkn.exe https://github.com/mkn/mkn/releases/download/latest/mkn.exe"
+        bash -c 'KLOG=3 ./mkn build run -dtKOp test -a "-EHsc -bigobj -D_SPARSEHASH_CI_TESTING_"'
+
