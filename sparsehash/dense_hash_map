@@ -341,6 +341,25 @@ class dense_hash_map {
     return rep.emplace_hint(hint, std::forward<Args>(args)...);
   }
 
+  template <typename... Args>
+  std::pair<iterator, bool> try_emplace(const key_type& k, Args&&... args) {
+    return rep.try_emplace(k, std::forward<Args>(args)...);
+  }
+
+  template <typename... Args>
+  std::pair<iterator, bool> try_emplace(key_type&& k, Args&&... args) {
+    return rep.try_emplace(std::move(k), std::forward<Args>(args)...);
+  }
+
+  template <typename... Args>
+  std::pair<iterator, bool> try_emplace(const_iterator, const key_type& k, Args&&... args) {
+    return rep.try_emplace(k, std::forward<Args>(args)...);
+  }
+
+  template <typename... Args>
+  std::pair<iterator, bool> try_emplace(const_iterator, key_type&& k, Args&&... args) {
+    return rep.try_emplace(std::move(k), std::forward<Args>(args)...);
+  }
 
   template <class InputIterator>
   void insert(InputIterator f, InputIterator l) {

@@ -97,6 +97,7 @@
 #include <memory>     // For uninitialized_fill
 #include <utility>    // for pair
 #include <stdexcept>  // For length_error
+#include <tuple>      // For forward_as_tuple
 #include <type_traits>
 #include <sparsehash/internal/hashtable-common.h>
 #include <sparsehash/internal/libc_allocator_with_realloc.h>
@@ -1049,6 +1050,15 @@ class dense_hashtable {
 
     // here we push key twice as we need it once for the indexing, and the rest of the params are for the emplace itself
     return insert_noresize(std::forward<K>(key), std::forward<K>(key), std::forward<Args>(args)...);
+  }
+
+  template <typename K, typename... Args>
+  std::pair<iterator, bool> try_emplace(K&& key, Args&&... args) {
+    resize_delta(1);
+    // here we push key as we need it for the indexing, and the rest of the params are for the emplace itself
+    return insert_noresize(std::forward<K>(key), std::piecewise_construct,
+        std::forward_as_tuple(std::forward<K>(key)),
+        std::forward_as_tuple(std::forward<Args>(args)...));
   }
 
   // When inserting a lot at a time, we specialize on the type of iterator
