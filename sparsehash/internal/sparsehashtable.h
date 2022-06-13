@@ -963,6 +963,21 @@ class sparse_hashtable {
     return iterator(this, table.get_iter(pos), table.nonempty_end());
   }
 
+  template <typename K, typename... Args>
+  iterator emplace_at(size_type pos, K&& key, Args&&... args) {
+    if (size() >= max_size()) {
+      throw std::length_error("insert overflow");
+    }
+    if (test_deleted(pos)) {  // just replace if it's been deleted
+      // The set() below will undelete this object.  We just worry about
+      // stats
+      assert(num_deleted > 0);
+      --num_deleted;  // used to be, now it isn't
+    }
+    table.set_inplace(pos, std::forward<K>(key), std::forward<Args>(args)...);
+    return iterator(this, table.get_iter(pos), table.nonempty_end());
+  }
+
   // If you know *this is big enough to hold obj, use this routine
   std::pair<iterator, bool> insert_noresize(const_reference obj) {
     // First, double-check we're not inserting delkey
@@ -976,6 +991,24 @@ class sparse_hashtable {
           false);  // false: we didn't insert
     } else {       // pos.second says where to put it
       return std::pair<iterator, bool>(insert_at(obj, pos.second), true);
+    }
+  }
+
+  template <typename K, typename... Args>
+  std::pair<iterator, bool> emplace_noresize(K&& key, Args&&... args) {
+    // First, double-check we're not inserting delkey
+    assert(
+        (!settings.use_deleted() || !equals(key, key_info.delkey)) &&
+        "Inserting the deleted key");
+    const std::pair<size_type, size_type> pos = find_position(key);
+    if (pos.first != ILLEGAL_BUCKET) {  // object was already there
+      return std::pair<iterator, bool>(
+          iterator(this, table.get_iter(pos.first), table.nonempty_end()),
+          false);  // false: we didn't insert
+    } else {       // pos.second says where to put it
+      return std::pair<iterator, bool>(
+        emplace_at(pos.second, std::forward<K>(key), std::forward<Args>(args)...),
+        true);
     }
   }
 
@@ -1004,6 +1037,12 @@ class sparse_hashtable {
   std::pair<iterator, bool> insert(const_reference obj) {
     resize_delta(1);  // adding an object, grow if need be
     return insert_noresize(obj);
+  }
+
+  template <typename K, typename... Args>
+  std::pair<iterator, bool> emplace(K&& key, Args&&... args) {
+    resize_delta(1);
+    return emplace_noresize(std::forward<K>(key), std::forward<Args>(args)...);
   }
 
   // When inserting a lot at a time, we specialize on the type of iterator
