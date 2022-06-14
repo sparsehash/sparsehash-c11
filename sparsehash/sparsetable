@@ -1160,6 +1160,8 @@ class sparsegroup {
     return group[offset];
   }
 
+  // Creates the inserted item in-place, and returns a reference to the inserted item.
+  // TODO: same as set() - handle exceptions from the constructor
   template <typename... Args>
   reference set_inplace(size_type i, Args&&... args) {
     size_type offset =
@@ -1646,6 +1648,7 @@ class sparsetable {
     return retval;
   }
 
+  // Creates the element to be inserted in-place by forwarding its constructor arguments
   template <typename... Args>
   reference set_inplace(size_type i, Args&&... args) {
     assert(i < settings.table_size);
