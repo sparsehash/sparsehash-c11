@@ -1046,6 +1046,84 @@ void insert(InputIterator f, InputIterator l) </pre> <A href="#2">[2]</A>
 
 <TR>
 <TD VAlign=top>
+   <pre>template&lt;class... Args&gt;
+pair&lt;iterator, bool&gt; emplace(Args&amp;&amp;... args)</pre>
+</TD>
+<TD VAlign=top>
+   <tt>sparse_hash_map</tt>
+</TD>
+<TD VAlign=top>
+   Inserts a new element into the <tt>sparse_hash_map</tt>. The element is
+   constructed in-place with the given <tt>args</tt>.
+</TD>
+</TR>
+
+<TR>
+<TD VAlign=top>
+   <pre>template&lt;class... Args&gt;
+pair&lt;iterator, bool&gt; try_emplace(const key_type&amp; k, Args&amp;&amp;... args)</pre>
+</TD>
+<TD VAlign=top>
+   <tt>sparse_hash_map</tt>
+</TD>
+<TD VAlign=top>
+   Inserts a new element into the <tt>sparse_hash_map</tt> with key <tt>k</tt>
+   and value constructed with <tt>args</tt>. Behaves like <tt>emplace</tt>
+   except that the element is constructed using <tt>std::pair</tt>'s
+   <tt>piecewise_construct</tt> constructor.
+</TD>
+</TR>
+
+<TR>
+<TD VAlign=top>
+   <pre>template&lt;class... Args&gt;
+pair&lt;iterator, bool&gt; try_emplace(key_type&amp;&amp; k, Args&amp;&amp;... args)</pre>
+</TD>
+<TD VAlign=top>
+   <tt>sparse_hash_map</tt>
+</TD>
+<TD VAlign=top>
+   Inserts a new element into the <tt>sparse_hash_map</tt> with key <tt>k</tt>
+   and value constructed with <tt>args</tt>. Behaves like <tt>emplace</tt>
+   except that the element is constructed using <tt>std::pair</tt>'s
+   <tt>piecewise_construct</tt> constructor.
+</TD>
+</TR>
+
+<TR>
+<TD VAlign=top>
+   <pre>template&lt;class... Args&gt;
+pair&lt;iterator, bool&gt; try_emplace(const_iterator hint, const key_type&amp; k, Args&amp;&amp;... args)</pre>
+</TD>
+<TD VAlign=top>
+   <tt>sparse_hash_map</tt>
+</TD>
+<TD VAlign=top>
+   Inserts a new element into the <tt>sparse_hash_map</tt> with key <tt>k</tt>
+   and value constructed with <tt>args</tt>. Behaves like <tt>emplace</tt>
+   except that the element is constructed using <tt>std::pair</tt>'s
+   <tt>piecewise_construct</tt> constructor.
+</TD>
+</TR>
+
+<TR>
+<TD VAlign=top>
+   <pre>template&lt;class... Args&gt;
+pair&lt;iterator, bool&gt; try_emplace(const_iterator hint, key_type&amp;&amp; k, Args&amp;&amp;... args)</pre>
+</TD>
+<TD VAlign=top>
+   <tt>sparse_hash_map</tt>
+</TD>
+<TD VAlign=top>
+   Inserts a new element into the <tt>sparse_hash_map</tt> with key <tt>k</tt>
+   and value constructed with <tt>args</tt>. Behaves like <tt>emplace</tt>
+   except that the element is constructed using <tt>std::pair</tt>'s
+   <tt>piecewise_construct</tt> constructor.
+</TD>
+</TR>
+
+<TR>
+<TD VAlign=top>
    <tt>void set_deleted_key(const key_type& key)</tt> <A href="#6">[6]</A>
 </TD>
 <TD VAlign=top>
