@@ -1160,8 +1160,8 @@ class sparsegroup {
     return group[offset];
   }
 
-  template <typename K, typename... Args>
-  reference set_inplace(size_type i, K&& key, Args&&... args) {
+  template <typename... Args>
+  reference set_inplace(size_type i, Args&&... args) {
     size_type offset =
         pos_to_offset(bitmap, i);  // where we'll find (or insert)
     if (bmtest(i)) {
@@ -1174,7 +1174,7 @@ class sparsegroup {
     }
     // This does the actual inserting.  Since we made the array using
     // malloc, we use "placement new" to just call the constructor.
-    new (&group[offset]) value_type(std::forward<K>(key), std::forward<Args>(args)...);
+    new (&group[offset]) value_type(std::forward<Args>(args)...);
     return group[offset];
   }
 
@@ -1646,13 +1646,13 @@ class sparsetable {
     return retval;
   }
 
-  template <typename K, typename... Args>
-  reference set_inplace(size_type i, K&& key, Args&&... args) {
+  template <typename... Args>
+  reference set_inplace(size_type i, Args&&... args) {
     assert(i < settings.table_size);
     typename group_type::size_type old_numbuckets =
         which_group(i).num_nonempty();
     reference retval =
-      which_group(i).set_inplace(pos_in_group(i), std::forward<K>(key), std::forward<Args>(args)...);
+      which_group(i).set_inplace(pos_in_group(i), std::forward<Args>(args)...);
     settings.num_buckets += which_group(i).num_nonempty() - old_numbuckets;
     return retval;
   }

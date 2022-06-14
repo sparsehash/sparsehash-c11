@@ -104,6 +104,7 @@
 #include <sparsehash/internal/hashtable-common.h>
 #include <sparsehash/sparsetable>  // IWYU pragma: export
 #include <stdexcept>               // For length_error
+#include <tuple>        // For forward_as_tuple
 
 namespace google {
 
@@ -963,8 +964,8 @@ class sparse_hashtable {
     return iterator(this, table.get_iter(pos), table.nonempty_end());
   }
 
-  template <typename K, typename... Args>
-  iterator emplace_at(size_type pos, K&& key, Args&&... args) {
+  template <typename... Args>
+  iterator emplace_at(size_type pos, Args&&... args) {
     if (size() >= max_size()) {
       throw std::length_error("insert overflow");
     }
@@ -974,7 +975,7 @@ class sparse_hashtable {
       assert(num_deleted > 0);
       --num_deleted;  // used to be, now it isn't
     }
-    table.set_inplace(pos, std::forward<K>(key), std::forward<Args>(args)...);
+    table.set_inplace(pos, std::forward<Args>(args)...);
     return iterator(this, table.get_iter(pos), table.nonempty_end());
   }
 
@@ -1007,7 +1008,7 @@ class sparse_hashtable {
           false);  // false: we didn't insert
     } else {       // pos.second says where to put it
       return std::pair<iterator, bool>(
-        emplace_at(pos.second, std::forward<K>(key), std::forward<Args>(args)...),
+        emplace_at(pos.second, std::forward<Args>(args)...),
         true);
     }
   }
@@ -1042,14 +1043,15 @@ class sparse_hashtable {
   template <typename K, typename... Args>
   std::pair<iterator, bool> emplace(K&& key, Args&&... args) {
     resize_delta(1);
-    return emplace_noresize(std::forward<K>(key), std::forward<Args>(args)...);
+    // here we push key twice as we need it once for the indexing, and the rest of the params are for the emplace itself
+    return emplace_noresize(std::forward<K>(key), std::forward<K>(key), std::forward<Args>(args)...);
   }
 
   template <typename K, typename... Args>
   std::pair<iterator, bool> try_emplace(K&& key, Args&&... args) {
     resize_delta(1);
     // here we push key as we need it for the indexing, and the rest of the params are for the emplace itself
-    return emplace_noresize(std::piecewise_construct,
+    return emplace_noresize(std::forward<K>(key), std::piecewise_construct,
         std::forward_as_tuple(std::forward<K>(key)),
         std::forward_as_tuple(std::forward<Args>(args)...));
   }

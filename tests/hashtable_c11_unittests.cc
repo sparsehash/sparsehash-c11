@@ -756,6 +756,8 @@ TEST(SparseHashMapIfaceTest, TryEmplace)
 
     // Test: key does not exist; using move constructor
     A::reset();
+    // Clear sparse_hash_map to avoid double-counting from copying existing elements
+    h.clear();
     p = h.try_emplace(20, A(200));
 
     ASSERT_TRUE(p.second);
@@ -782,6 +784,8 @@ TEST(SparseHashMapIfaceTest, TryEmplace)
 
     // Test: key does not exist; using default constructor
     A::reset();
+    // Clear sparse_hash_map to avoid double-counting from copying existing elements
+    h.clear();
     p = h.try_emplace(30);
 
     ASSERT_TRUE(p.second);
