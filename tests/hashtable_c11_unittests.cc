@@ -723,3 +723,73 @@ TEST(SparseHashMapMoveTest, Emplace_KeyMoveCount)
     ASSERT_EQ(0, A::move_ctor);
     ASSERT_EQ(0, A::move_assign);
 }
+
+TEST(SparseHashMapIfaceTest, TryEmplace)
+{
+    sparse_hash_map<int, A> h;
+
+    // Test: key does not exist; using user-defined constructor with forwarded argument
+    A::reset();
+    auto p = h.try_emplace(10, 100);
+
+    ASSERT_TRUE(p.second);
+    ASSERT_EQ(10, p.first->first);
+    ASSERT_EQ(100, p.first->second);
+    ASSERT_EQ(100, h[10]._i);
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+
+    // Test: key exists; using forwarded argument
+    A::reset();
+    p = h.try_emplace(10, 101);
+
+    ASSERT_FALSE(p.second);
+    ASSERT_EQ(10, p.first->first);
+    ASSERT_EQ(100, p.first->second);
+    ASSERT_EQ(100, h[10]._i);
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+
+    // Test: key does not exist; using move constructor
+    A::reset();
+    p = h.try_emplace(20, A(200));
+
+    ASSERT_TRUE(p.second);
+    ASSERT_EQ(20, p.first->first);
+    ASSERT_EQ(200, p.first->second);
+    ASSERT_EQ(h[20]._i, 200);
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(1, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+
+    // Test: key exists; using move constructor
+    A::reset();
+    p = h.try_emplace(20, A(201));
+
+    ASSERT_FALSE(p.second);
+    ASSERT_EQ(20, p.first->first);
+    ASSERT_EQ(200, p.first->second);
+    ASSERT_EQ(h[20]._i, 200);
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+
+    // Test: key does not exist; using default constructor
+    A::reset();
+    p = h.try_emplace(30);
+
+    ASSERT_TRUE(p.second);
+    ASSERT_EQ(30, p.first->first);
+    ASSERT_EQ(0, p.first->second);
+    ASSERT_EQ(h[30]._i, 0);
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+}

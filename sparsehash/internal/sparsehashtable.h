@@ -1045,6 +1045,15 @@ class sparse_hashtable {
     return emplace_noresize(std::forward<K>(key), std::forward<Args>(args)...);
   }
 
+  template <typename K, typename... Args>
+  std::pair<iterator, bool> try_emplace(K&& key, Args&&... args) {
+    resize_delta(1);
+    // here we push key as we need it for the indexing, and the rest of the params are for the emplace itself
+    return emplace_noresize(std::piecewise_construct,
+        std::forward_as_tuple(std::forward<K>(key)),
+        std::forward_as_tuple(std::forward<Args>(args)...));
+  }
+
   // When inserting a lot at a time, we specialize on the type of iterator
   template <class InputIterator>
   void insert(InputIterator f, InputIterator l) {
