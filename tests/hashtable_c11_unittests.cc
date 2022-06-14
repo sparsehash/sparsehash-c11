@@ -677,3 +677,49 @@ TEST(DenseHashMapIfaceTest, TryEmplace)
     ASSERT_EQ(0, A::move_assign);
 }
 
+TEST(SparseHashMapMoveTest, Emplace)
+{
+    sparse_hash_map<int, int> h;
+
+    auto p = h.emplace(5, 1234);
+    ASSERT_EQ(true, p.second);
+    ASSERT_EQ(5, p.first->first);
+    ASSERT_EQ(1234, p.first->second);
+
+    p = h.emplace(10, 5678);
+    ASSERT_EQ(true, p.second);
+    ASSERT_EQ(10, p.first->first);
+    ASSERT_EQ(5678, p.first->second);
+
+    ASSERT_EQ(2, (int)h.size());
+
+    ASSERT_TRUE(h.emplace(11, 1).second);
+    ASSERT_FALSE(h.emplace(11, 1).second);
+    ASSERT_TRUE(h.emplace(12, 1).second);
+    ASSERT_FALSE(h.emplace(12, 1).second);
+}
+
+TEST(SparseHashMapMoveTest, Emplace_ValueMoveCount)
+{
+    sparse_hash_map<int, A> h;
+
+    A::reset();
+    h.emplace(1, 2);
+
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+}
+
+TEST(SparseHashMapMoveTest, Emplace_KeyMoveCount)
+{
+    sparse_hash_map<A, int, HashA> h;
+    A::reset();
+    h.emplace(1, 2);
+
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+}
