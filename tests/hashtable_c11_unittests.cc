@@ -677,3 +677,123 @@ TEST(DenseHashMapIfaceTest, TryEmplace)
     ASSERT_EQ(0, A::move_assign);
 }
 
+TEST(SparseHashMapMoveTest, Emplace)
+{
+    sparse_hash_map<int, int> h;
+
+    auto p = h.emplace(5, 1234);
+    ASSERT_EQ(true, p.second);
+    ASSERT_EQ(5, p.first->first);
+    ASSERT_EQ(1234, p.first->second);
+
+    p = h.emplace(10, 5678);
+    ASSERT_EQ(true, p.second);
+    ASSERT_EQ(10, p.first->first);
+    ASSERT_EQ(5678, p.first->second);
+
+    ASSERT_EQ(2, (int)h.size());
+
+    ASSERT_TRUE(h.emplace(11, 1).second);
+    ASSERT_FALSE(h.emplace(11, 1).second);
+    ASSERT_TRUE(h.emplace(12, 1).second);
+    ASSERT_FALSE(h.emplace(12, 1).second);
+}
+
+TEST(SparseHashMapMoveTest, Emplace_ValueMoveCount)
+{
+    sparse_hash_map<int, A> h;
+
+    A::reset();
+    h.emplace(1, 2);
+
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+}
+
+TEST(SparseHashMapMoveTest, Emplace_KeyMoveCount)
+{
+    sparse_hash_map<A, int, HashA> h;
+    A::reset();
+    h.emplace(1, 2);
+
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+}
+
+TEST(SparseHashMapIfaceTest, TryEmplace)
+{
+    sparse_hash_map<int, A> h;
+
+    // Test: key does not exist; using user-defined constructor with forwarded argument
+    A::reset();
+    auto p = h.try_emplace(10, 100);
+
+    ASSERT_TRUE(p.second);
+    ASSERT_EQ(10, p.first->first);
+    ASSERT_EQ(100, p.first->second);
+    ASSERT_EQ(100, h[10]._i);
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+
+    // Test: key exists; using forwarded argument
+    A::reset();
+    p = h.try_emplace(10, 101);
+
+    ASSERT_FALSE(p.second);
+    ASSERT_EQ(10, p.first->first);
+    ASSERT_EQ(100, p.first->second);
+    ASSERT_EQ(100, h[10]._i);
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+
+    // Test: key does not exist; using move constructor
+    A::reset();
+    // Clear sparse_hash_map to avoid double-counting from copying existing elements
+    h.clear();
+    p = h.try_emplace(20, A(200));
+
+    ASSERT_TRUE(p.second);
+    ASSERT_EQ(20, p.first->first);
+    ASSERT_EQ(200, p.first->second);
+    ASSERT_EQ(h[20]._i, 200);
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(1, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+
+    // Test: key exists; using move constructor
+    A::reset();
+    p = h.try_emplace(20, A(201));
+
+    ASSERT_FALSE(p.second);
+    ASSERT_EQ(20, p.first->first);
+    ASSERT_EQ(200, p.first->second);
+    ASSERT_EQ(h[20]._i, 200);
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+
+    // Test: key does not exist; using default constructor
+    A::reset();
+    // Clear sparse_hash_map to avoid double-counting from copying existing elements
+    h.clear();
+    p = h.try_emplace(30);
+
+    ASSERT_TRUE(p.second);
+    ASSERT_EQ(30, p.first->first);
+    ASSERT_EQ(0, p.first->second);
+    ASSERT_EQ(h[30]._i, 0);
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+}
