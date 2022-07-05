@@ -950,22 +950,8 @@ class sparse_hashtable {
   // INSERTION ROUTINES
  private:
   // Private method used by insert_noresize and find_or_insert.
-  iterator insert_at(const_reference obj, size_type pos) {
-    if (size() >= max_size()) {
-      throw std::length_error("insert overflow");
-    }
-    if (test_deleted(pos)) {  // just replace if it's been deleted
-      // The set() below will undelete this object.  We just worry about
-      // stats
-      assert(num_deleted > 0);
-      --num_deleted;  // used to be, now it isn't
-    }
-    table.set(pos, obj);
-    return iterator(this, table.get_iter(pos), table.nonempty_end());
-  }
-
   template <typename... Args>
-  iterator emplace_at(size_type pos, Args&&... args) {
+  iterator insert_at(size_type pos, Args&&... args) {
     if (size() >= max_size()) {
       throw std::length_error("insert overflow");
     }
@@ -975,28 +961,13 @@ class sparse_hashtable {
       assert(num_deleted > 0);
       --num_deleted;  // used to be, now it isn't
     }
-    table.set_inplace(pos, std::forward<Args>(args)...);
+    table.set(pos, std::forward<Args>(args)...);
     return iterator(this, table.get_iter(pos), table.nonempty_end());
   }
 
   // If you know *this is big enough to hold obj, use this routine
-  std::pair<iterator, bool> insert_noresize(const_reference obj) {
-    // First, double-check we're not inserting delkey
-    assert(
-        (!settings.use_deleted() || !equals(get_key(obj), key_info.delkey)) &&
-        "Inserting the deleted key");
-    const std::pair<size_type, size_type> pos = find_position(get_key(obj));
-    if (pos.first != ILLEGAL_BUCKET) {  // object was already there
-      return std::pair<iterator, bool>(
-          iterator(this, table.get_iter(pos.first), table.nonempty_end()),
-          false);  // false: we didn't insert
-    } else {       // pos.second says where to put it
-      return std::pair<iterator, bool>(insert_at(obj, pos.second), true);
-    }
-  }
-
   template <typename K, typename... Args>
-  std::pair<iterator, bool> emplace_noresize(K&& key, Args&&... args) {
+  std::pair<iterator, bool> insert_noresize(K&& key, Args&&... args) {
     // First, double-check we're not inserting delkey
     assert(
         (!settings.use_deleted() || !equals(key, key_info.delkey)) &&
@@ -1008,7 +979,7 @@ class sparse_hashtable {
           false);  // false: we didn't insert
     } else {       // pos.second says where to put it
       return std::pair<iterator, bool>(
-        emplace_at(pos.second, std::forward<Args>(args)...),
+        insert_at(pos.second, std::forward<Args>(args)...),
         true);
     }
   }
@@ -1023,7 +994,7 @@ class sparse_hashtable {
     }
     resize_delta(static_cast<size_type>(dist));
     for (; dist > 0; --dist, ++f) {
-      insert_noresize(*f);
+      insert_noresize(get_key(*f), *f);
     }
   }
 
@@ -1035,23 +1006,24 @@ class sparse_hashtable {
 
  public:
   // This is the normal insert routine, used by the outside world
-  std::pair<iterator, bool> insert(const_reference obj) {
+  template <typename Arg>
+  std::pair<iterator, bool> insert(Arg&& obj) {
     resize_delta(1);  // adding an object, grow if need be
-    return insert_noresize(obj);
+    return insert_noresize(get_key(std::forward<Arg>(obj)), std::forward<Arg>(obj));
   }
 
   template <typename K, typename... Args>
   std::pair<iterator, bool> emplace(K&& key, Args&&... args) {
     resize_delta(1);
     // here we push key twice as we need it once for the indexing, and the rest of the params are for the emplace itself
-    return emplace_noresize(std::forward<K>(key), std::forward<K>(key), std::forward<Args>(args)...);
+    return insert_noresize(std::forward<K>(key), std::forward<K>(key), std::forward<Args>(args)...);
   }
 
   template <typename K, typename... Args>
   std::pair<iterator, bool> try_emplace(K&& key, Args&&... args) {
     resize_delta(1);
     // here we push key as we need it for the indexing, and the rest of the params are for the emplace itself
-    return emplace_noresize(std::forward<K>(key), std::piecewise_construct,
+    return insert_noresize(std::forward<K>(key), std::piecewise_construct,
         std::forward_as_tuple(std::forward<K>(key)),
         std::forward_as_tuple(std::forward<Args>(args)...));
   }
@@ -1064,23 +1036,20 @@ class sparse_hashtable {
            typename std::iterator_traits<InputIterator>::iterator_category());
   }
 
-  // DefaultValue is a functor that takes a key and returns a value_type
-  // representing the default value to be inserted if none is found.
-  template <class DefaultValue>
-  value_type& find_or_insert(const key_type& key) {
+  template <class T, class K>
+  value_type& find_or_insert(K&& key) {
     // First, double-check we're not inserting delkey
     assert((!settings.use_deleted() || !equals(key, key_info.delkey)) &&
            "Inserting the deleted key");
     const std::pair<size_type, size_type> pos = find_position(key);
-    DefaultValue default_value;
     if (pos.first != ILLEGAL_BUCKET) {  // object was already there
       return *table.get_iter(pos.first);
     } else if (resize_delta(1)) {  // needed to rehash to make room
       // Since we resized, we can't use pos, so recalculate where to
       // insert.
-      return *insert_noresize(default_value(key)).first;
+      return *insert_noresize(std::forward<K>(key), std::forward<K>(key), T()).first;
     } else {  // no need to rehash, insert right here
-      return *insert_at(default_value(key), pos.second);
+      return *insert_at(pos.second, std::forward<K>(key), T());
     }
   }
 

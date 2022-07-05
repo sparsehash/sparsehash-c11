@@ -1140,30 +1140,11 @@ class sparsegroup {
   }
 
  public:
-  // This returns a reference to the inserted item (which is a copy of val).
+  // Creates the inserted item in-place, and returns a reference to the inserted item.
   // TODO(austern): Make this exception safe: handle exceptions from
   // value_type's copy constructor.
-  reference set(size_type i, const_reference val) {
-    size_type offset =
-        pos_to_offset(bitmap, i);  // where we'll find (or insert)
-    if (bmtest(i)) {
-      // Delete the old value, which we're replacing with the new one
-      group[offset].~value_type();
-    } else {
-      set_aux(offset, realloc_and_memmove_ok());
-      ++settings.num_buckets;
-      bmset(i);
-    }
-    // This does the actual inserting.  Since we made the array using
-    // malloc, we use "placement new" to just call the constructor.
-    new (&group[offset]) value_type(val);
-    return group[offset];
-  }
-
-  // Creates the inserted item in-place, and returns a reference to the inserted item.
-  // TODO: same as set() - handle exceptions from the constructor
   template <typename... Args>
-  reference set_inplace(size_type i, Args&&... args) {
+  reference set(size_type i, Args&&... args) {
     size_type offset =
         pos_to_offset(bitmap, i);  // where we'll find (or insert)
     if (bmtest(i)) {
@@ -1637,25 +1618,16 @@ class sparsetable {
             groups[current_row].offset_to_pos(current_col));
   }
 
-  // This returns a reference to the inserted item (which is a copy of val)
+  // This returns a reference to the inserted item, after creating it
+  // in-place by forwarding its constructor arguments.
   // The trick is to figure out whether we're replacing or inserting anew
-  reference set(size_type i, const_reference val) {
-    assert(i < settings.table_size);
-    typename group_type::size_type old_numbuckets =
-        which_group(i).num_nonempty();
-    reference retval = which_group(i).set(pos_in_group(i), val);
-    settings.num_buckets += which_group(i).num_nonempty() - old_numbuckets;
-    return retval;
-  }
-
-  // Creates the element to be inserted in-place by forwarding its constructor arguments
   template <typename... Args>
-  reference set_inplace(size_type i, Args&&... args) {
+  reference set(size_type i, Args&&... args) {
     assert(i < settings.table_size);
     typename group_type::size_type old_numbuckets =
         which_group(i).num_nonempty();
     reference retval =
-      which_group(i).set_inplace(pos_in_group(i), std::forward<Args>(args)...);
+      which_group(i).set(pos_in_group(i), std::forward<Args>(args)...);
     settings.num_buckets += which_group(i).num_nonempty() - old_numbuckets;
     return retval;
   }
