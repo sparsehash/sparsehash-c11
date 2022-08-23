@@ -17,11 +17,6 @@ jobs:
         arch: amd64
 
     - shell: cmd
-      env:
-        MKN_CL_PREFERRED: 1
-      run: | # /bin/link interferes with cl/link.exe
-        bash -c "rm /bin/link"
-        bash -c "rm -rf tests/{gtest,gmock}"
-        bash -c "curl -Lo mkn.exe https://github.com/mkn/mkn/releases/download/latest/mkn.exe"
-        bash -c 'KLOG=3 ./mkn build run -dtKOp test -a "-EHsc -bigobj -D_SPARSEHASH_CI_TESTING_"'
+      name: test
+      run: mkdir build && cd build && cmake .. -DCMAKE_CXX_FLAGS="-D_SPARSEHASH_CI_TESTING_=1"
 
