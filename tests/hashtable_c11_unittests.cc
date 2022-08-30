@@ -164,6 +164,10 @@ int A::copy_assign = 0;
 int A::move_ctor = 0;
 int A::move_assign = 0;
 
+struct B : public A {
+    B(int i) noexcept : A(i) {}
+};
+
 std::ostream& operator<<(std::ostream& os, const A& a)
 {
     return os << a._i << " copy_ctor=" << a.copy_ctor << " copy_assign=" << a.copy_assign <<
@@ -291,6 +295,34 @@ TEST(DenseHashMapMoveTest, InsertMoved_KeyMoveCount)
     ASSERT_EQ(0, A::copy_ctor);
     ASSERT_EQ(0, A::copy_assign);
     ASSERT_EQ(1, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+}
+
+TEST(DenseHashMapMoveTest, InsertConversion_KeyMoveCount)
+{
+    dense_hash_map<A, int, HashA> h;
+    h.set_empty_key(A(0));
+
+    A::reset();
+    h.insert(std::make_pair(2, 2));
+
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(0, A::move_ctor);
+    ASSERT_EQ(0, A::move_assign);
+}
+
+TEST(DenseHashMapMoveTest, InsertDerivedKey)
+{
+    dense_hash_map<A, int, HashA> h;
+    h.set_empty_key(A(0));
+
+    A::reset();
+    h.insert(std::make_pair(B(2), 2));
+
+    ASSERT_EQ(0, A::copy_ctor);
+    ASSERT_EQ(0, A::copy_assign);
+    ASSERT_EQ(2, A::move_ctor);
     ASSERT_EQ(0, A::move_assign);
 }
 
