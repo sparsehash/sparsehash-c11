@@ -12,10 +12,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: mkn
-      run: |
-        rm -rf tests/{gtest,gmock}
-        curl -Lo mkn https://github.com/mkn/mkn/releases/download/latest/mkn_osx
-        chmod +x mkn
-        KLOG=3 ./mkn build run -dtOp test,bench -a "-std=c++11 -fPIC -Wno-gnu-zero-variadic-macro-arguments" -W 9 -l -pthread
+    - name: test
+      run: mkdir build && cd build && cmake .. -DCMAKE_CXX_FLAGS="-D_SPARSEHASH_CI_TESTING_=1"
 

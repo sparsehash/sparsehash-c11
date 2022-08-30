@@ -1,1 +1,1 @@
-add_library(gtest gmock-gtest-all.cc)
+add_library(gtest gtest-all.cc gmock-all.cc)
