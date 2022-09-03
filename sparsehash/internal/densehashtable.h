@@ -1312,7 +1312,7 @@ class dense_hashtable {
 
     // We want to return the exact same type as ExtractKey: Key or const Key&
     template <typename V>
-    typename ExtractKey::result_type get_key(V&& v) const {
+    auto get_key(V&& v) const -> decltype(ExtractKey::operator()(std::forward<V>(v))) {
       return ExtractKey::operator()(std::forward<V>(v));
     }
     void set_key(pointer v, const key_type& k) const {
@@ -1340,7 +1340,7 @@ class dense_hashtable {
     return key_info.equals(a, b);
   }
   template <typename V>
-  typename ExtractKey::result_type get_key(V&& v) const {
+  auto get_key(V&& v) const -> decltype(std::declval<KeyInfo>().get_key(std::forward<V>(v))) {
     return key_info.get_key(std::forward<V>(v));
   }
   void set_key(pointer v, const key_type& k) const { key_info.set_key(v, k); }
