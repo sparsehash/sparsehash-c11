@@ -1328,8 +1328,8 @@ class dense_hashtable {
 
     // Which key marks deleted entries.
     // TODO(csilvers): make a pointer, and get rid of use_deleted (benchmark!)
-    typename std::remove_const<key_type>::type delkey;
-    typename std::remove_const<key_type>::type empty_key;
+    typename std::remove_const<key_type>::type delkey{};
+    typename std::remove_const<key_type>::type empty_key{};
   };
 
   // Utility functions to access the templated operators
